@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kouverte-shop
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SHOP_NAME
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false

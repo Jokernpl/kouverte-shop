@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Il Mio Shop</title>
+<meta name="description" content="Negozio online — telefonia, accessori e tanto altro. Spedizione veloce, pagamenti sicuri.">
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="logo"><span class="dot">🛍️</span><span id="shopName">Il Mio Shop</span></div>
+    <div class="search">
+      <span>🔎</span>
+      <input id="q" placeholder="Cerca un prodotto..." autocomplete="off">
+    </div>
+    <button class="cart-btn" onclick="openCart()">🛒 Carrello<span class="badge" id="cartCount">0</span></button>
+  </div>
+  <div class="cats" id="cats"></div>
+</header>
+
+<main class="wrap">
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none"><h3>Nessun prodotto</h3><p>Aggiungi i tuoi prodotti dal <a href="/admin.html" style="color:var(--brand);font-weight:700">pannello admin</a>.</p></div>
+</main>
+
+<div class="foot">Pagamenti sicuri · <a href="/admin.html" style="color:var(--muted)">Area gestione</a></div>
+
+<!-- Product modal -->
+<div class="scrim pmodal" id="pmodal">
+  <div class="drawer" onclick="event.stopPropagation()">
+    <div class="pm-img" id="pmImg">📦</div>
+    <div class="pm-body">
+      <div class="card-cat" style="color:var(--brand);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.6px" id="pmCat"></div>
+      <h2 id="pmName" style="margin:6px 0"></h2>
+      <div class="price" id="pmPrice" style="font-size:26px"></div>
+      <div class="pm-desc" id="pmDesc"></div>
+      <button class="btn" id="pmAdd">Aggiungi al carrello</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cart / checkout drawer -->
+<div class="scrim" id="cartScrim" onclick="closeCart()">
+  <div class="drawer" id="cartDrawer" onclick="event.stopPropagation()">
+    <div class="dhead">
+      <h2 id="drawerTitle">🛒 Il tuo carrello</h2>
+      <button class="x" onclick="closeCart()">✕</button>
+    </div>
+
+    <!-- CART view -->
+    <div id="cartView" style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="dbody" id="cartItems"></div>
+      <div class="dfoot">
+        <div class="totrow"><span>Totale</span><b id="cartTotal">€0,00</b></div>
+        <button class="btn" id="toCheckout">Vai al pagamento →</button>
+      </div>
+    </div>
+
+    <!-- CHECKOUT view -->
+    <div id="checkoutView" style="display:none;flex-direction:column;flex:1;min-height:0">
+      <div class="dbody">
+        <div class="field"><label>Nome e cognome *</label><input id="f_name" placeholder="Mario Rossi"></div>
+        <div class="field"><label>Email *</label><input id="f_email" type="email" placeholder="mario@email.com"></div>
+        <div class="field"><label>Telefono</label><input id="f_phone" placeholder="333 1234567"></div>
+        <div class="field"><label>Indirizzo *</label><input id="f_address" placeholder="Via Roma 1"></div>
+        <div class="two">
+          <div class="field"><label>Città</label><input id="f_city" placeholder="Milano"></div>
+          <div class="field"><label>CAP</label><input id="f_zip" placeholder="20100"></div>
+        </div>
+        <div class="field"><label>Note (opzionale)</label><textarea id="f_note" rows="2" placeholder="Note per la consegna..."></textarea></div>
+      </div>
+      <div class="dfoot">
+        <div class="totrow"><span>Totale da pagare</span><b id="coTotal">€0,00</b></div>
+        <button class="btn" id="payBtn">Paga ora</button>
+        <button class="btn ghost" style="margin-top:8px" onclick="showCartView()">← Torna al carrello</button>
+        <div class="secure" id="secureLine">🔒 Pagamento sicuro con Stripe</div>
+        <div class="note-pay" id="payNote"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="shop.js?v=1"></script>
+</body>
+</html>

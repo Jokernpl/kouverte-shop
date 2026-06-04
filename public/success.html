@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ordine confermato</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+<div class="wrap" style="max-width:560px;padding-top:60px">
+  <div class="card" style="padding:34px;text-align:center">
+    <div id="ic" style="font-size:64px">✅</div>
+    <h1 id="ttl" style="margin:10px 0 6px">Grazie!</h1>
+    <p id="msg" style="color:var(--muted);font-size:15px;line-height:1.6">Stiamo confermando il tuo ordine…</p>
+    <div id="box" style="text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:18px 0;display:none"></div>
+    <a class="btn" href="/">Torna al negozio</a>
+  </div>
+</div>
+<script>
+const money = n => '€' + (Math.round(n*100)/100).toFixed(2).replace('.',',');
+const esc = s => (s||'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+(async ()=>{
+  const u = new URLSearchParams(location.search);
+  const order = u.get('order'), sid = u.get('session_id');
+  if(!order){ document.getElementById('msg').textContent='Ordine non trovato.'; return; }
+  try{
+    const r = await fetch('/api/checkout/verify?order='+encodeURIComponent(order)+(sid?'&session_id='+encodeURIComponent(sid):''));
+    const d = await r.json();
+    if(!d.ok){ document.getElementById('ic').textContent='⚠️'; document.getElementById('ttl').textContent='Ops'; document.getElementById('msg').textContent=d.error||'Errore'; return; }
+    const o = d.order;
+    try{ localStorage.removeItem('shop_cart'); }catch(e){}
+    const paid = o.status==='paid';
+    document.getElementById('ic').textContent = paid ? '✅' : '🧾';
+    document.getElementById('ttl').textContent = paid ? 'Pagamento riuscito!' : 'Ordine ricevuto!';
+    document.getElementById('msg').innerHTML = paid
+      ? 'Grazie '+esc(o.customer.name)+'! Riceverai il tuo ordine a breve.'
+      : (d.demo ? 'Grazie '+esc(o.customer.name)+'! Il venditore ti contatterà per il pagamento e la consegna.' : 'Ordine registrato.');
+    const box = document.getElementById('box');
+    box.style.display='block';
+    box.innerHTML = '<b>Riepilogo ordine</b><br><span style="color:var(--muted);font-size:13px">N. '+esc(o.id)+'</span>'+
+      o.items.map(it=>'<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:14px"><span>'+esc(it.name)+' × '+it.qty+'</span><span>'+money(it.price*it.qty)+'</span></div>').join('')+
+      '<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-weight:800"><span>Totale</span><span>'+money(o.total)+'</span></div>';
+  }catch(e){ document.getElementById('msg').textContent='Errore di verifica.'; }
+})();
+</script>
+</body>
+</html>
