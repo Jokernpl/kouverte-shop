@@ -24,9 +24,12 @@ Senza configurazione il sito funziona in modalità **"raccolta ordini"** (l'ordi
 | Variabile | A cosa serve | Default |
 |---|---|---|
 | `ADMIN_PASSWORD` | password del pannello admin | `admin123` |
-| `SHOP_NAME` | nome del negozio mostrato | `Il Mio Shop` |
+| `SHOP_NAME` | nome del negozio mostrato | `Kouverte Elettronica` |
 | `STRIPE_SECRET_KEY` | attiva i pagamenti con carta | (vuoto = raccolta ordini) |
 | `CURRENCY` | valuta | `eur` |
+| `UPSTASH_REDIS_REST_URL` | persistenza durevole: ordini/prodotti sopravvivono ai redeploy | (vuoto = solo file) |
+| `UPSTASH_REDIS_REST_TOKEN` | token Upstash REST (vedi sopra) | (vuoto = solo file) |
+| `SHOP_REDIS_KEY` | chiave Redis dove sono salvati i dati | `kouverte:shop:db` |
 
 ## ⚠️ Note importanti
 - **Render free**: disco effimero → `data.json` (prodotti/ordini) si azzera ad ogni riavvio/redeploy. Per uso reale serve un DB durevole (es. Postgres/Redis) — è il prossimo passo.

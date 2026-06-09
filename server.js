@@ -12,7 +12,7 @@ app.set('trust proxy', true);
 
 const PORT = process.env.PORT || 8095;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const SHOP_NAME = process.env.SHOP_NAME || 'Il Mio Shop';
+const SHOP_NAME = process.env.SHOP_NAME || 'Kouverte Elettronica';
 const CURRENCY = (process.env.CURRENCY || 'eur').toLowerCase();
 
 // --- Stripe (attivo solo se imposti STRIPE_SECRET_KEY) ---
@@ -27,20 +27,75 @@ if (process.env.STRIPE_SECRET_KEY) {
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ---------- DB su file JSON ----------
+// ---------- DB: file JSON locale + backup DUREVOLE su Redis (Upstash REST) ----------
+// ⚠️ Su Render free il disco è effimero: data.json si azzera a OGNI redeploy/riavvio,
+// quindi prodotti e ORDINI dei clienti andrebbero persi. Per renderli permanenti
+// imposta le variabili UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN.
+// Puoi riusare le STESSE credenziali della chat Kouverte: qui uso una CHIAVE diversa
+// (kouverte:shop:db) così i dati del negozio NON si mischiano con quelli della chat.
+// Senza quelle variabili il negozio funziona come prima (solo file locale).
 const DB_FILE = path.join(__dirname, 'data.json');
 let db = { products: [], orders: [] };
 function uid(p) { return (p || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-function load() {
+
+const REDIS_URL    = (process.env.UPSTASH_REDIS_REST_URL   || '').trim().replace(/^["']|["']$/g, '').replace(/\/+$/, '');
+const REDIS_TOKEN  = (process.env.UPSTASH_REDIS_REST_TOKEN || '').trim().replace(/^["']|["']$/g, '');
+const REDIS_KEY    = (process.env.SHOP_REDIS_KEY || 'kouverte:shop:db').trim();
+const redisEnabled = !!(REDIS_URL && REDIS_TOKEN);
+
+async function redisSet(obj) {
+  if (!redisEnabled) return false;
+  try {
+    const r = await fetch(REDIS_URL + '/set/' + encodeURIComponent(REDIS_KEY), {
+      method: 'POST', headers: { Authorization: 'Bearer ' + REDIS_TOKEN }, body: JSON.stringify(obj)
+    });
+    return r.ok;
+  } catch (e) { console.error('[DB] Redis set error:', e.message); return false; }
+}
+async function redisGet() {
+  if (!redisEnabled) return null;
+  try {
+    const r = await fetch(REDIS_URL + '/get/' + encodeURIComponent(REDIS_KEY), {
+      headers: { Authorization: 'Bearer ' + REDIS_TOKEN }
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (j && typeof j.result === 'string' && j.result) return JSON.parse(j.result);
+    return null;
+  } catch (e) { console.error('[DB] Redis get error:', e.message); return null; }
+}
+
+async function load() {
+  // 1) Redis è la fonte di verità: dopo un redeploy il file è vuoto ma Redis no.
+  if (redisEnabled) {
+    const fromRedis = await redisGet();
+    if (fromRedis && (Array.isArray(fromRedis.products) || Array.isArray(fromRedis.orders))) {
+      db = { products: fromRedis.products || [], orders: fromRedis.orders || [] };
+      try { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); } catch (e) {}
+      console.log('[DB] ✅ Ripristinato da Redis: ' + db.products.length + ' prodotti · ' + db.orders.length + ' ordini');
+      return;
+    }
+    console.log('[DB] Redis attivo ma vuoto → carico da file/seed e lo salvo su Redis');
+  }
+  // 2) File locale (o seed iniziale alla prima accensione)
   try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
   catch (e) { db = { products: [], orders: [] }; seed(); }
   if (!db.products) db.products = [];
   if (!db.orders) db.orders = [];
+  // Se Redis è attivo ma era vuoto, salva subito lo stato così diventa durevole.
+  if (redisEnabled) redisSet(db).then(ok => console.log(ok ? '[DB] ✅ Stato iniziale salvato su Redis' : '[DB] ⚠️ Salvataggio iniziale su Redis fallito'));
 }
-let saveT = null;
+
+let fileT = null, redisT = null;
 function save() {
-  clearTimeout(saveT);
-  saveT = setTimeout(() => { try { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); } catch (e) { console.error('save err', e); } }, 150);
+  // copia locale veloce (utile in locale e come cache)
+  clearTimeout(fileT);
+  fileT = setTimeout(() => { try { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); } catch (e) { console.error('save err', e); } }, 150);
+  // backup durevole su Redis — debounce 400ms così l'ULTIMO stato arriva sempre
+  if (redisEnabled) {
+    clearTimeout(redisT);
+    redisT = setTimeout(() => { redisSet(db).then(ok => { if (!ok) console.warn('[DB] ⚠️ backup Redis non riuscito'); }); }, 400);
+  }
 }
 function seed() {
   // Prodotti di ESEMPIO (cancellali dal pannello e metti i tuoi)
@@ -206,8 +261,10 @@ io.on('connection', (socket) => {
   socket.on('admin-auth', (pass) => { if (pass === ADMIN_PASSWORD) socket.join('admin'); });
 });
 
-load();
-server.listen(PORT, () => {
-  console.log(`🛍️  KOUVERTE SHOP · http://localhost:${PORT}`);
-  console.log(`   prodotti: ${db.products.length} · ordini: ${db.orders.length} · admin pass: ${ADMIN_PASSWORD === 'admin123' ? 'admin123 (CAMBIALA!)' : '***'}`);
-});
+load().then(() => {
+  server.listen(PORT, () => {
+    console.log(`🛍️  KOUVERTE SHOP · http://localhost:${PORT}`);
+    console.log(`   prodotti: ${db.products.length} · ordini: ${db.orders.length} · admin pass: ${ADMIN_PASSWORD === 'admin123' ? 'admin123 (CAMBIALA!)' : '***'}`);
+    console.log('   persistenza: ' + (redisEnabled ? 'Redis Upstash ✅ (durevole, sopravvive ai redeploy)' : 'solo file ⚠️ effimero su Render free → imposta UPSTASH_REDIS_REST_URL/TOKEN'));
+  });
+}).catch(e => { console.error('Avvio fallito:', e); process.exit(1); });

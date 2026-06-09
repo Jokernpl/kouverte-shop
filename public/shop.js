@@ -1,5 +1,5 @@
 // ===== Kouverte Shop — storefront =====
-let CFG = { shopName: 'Il Mio Shop', currency: 'eur', stripeEnabled: false };
+let CFG = { shopName: 'Kouverte Elettronica', currency: 'eur', stripeEnabled: false };
 let PRODUCTS = [];
 let CART = {};         // { productId: qty }
 let curCat = '';
