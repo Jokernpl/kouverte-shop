@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 8095;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const SHOP_NAME = process.env.SHOP_NAME || 'Kouverte Elettronica';
 const CURRENCY = (process.env.CURRENCY || 'eur').toLowerCase();
+const fulfillment = require('./fulfillment'); // evasione/dropshipping (AliExpress)
 
 // --- Stripe (attivo solo se imposti STRIPE_SECRET_KEY) ---
 let stripe = null;
@@ -134,6 +135,21 @@ function baseUrl(req) {
 }
 function safeOrder(o) { return { id: o.id, items: o.items, customer: { name: o.customer.name }, total: o.total, status: o.status, ts: o.ts }; }
 
+// Inoltro automatico al fornitore: parte SOLO con DROPSHIP_AUTO=1 + credenziali AliExpress.
+// Senza credenziali è un no-op sicuro (non spende e non inoltra nulla).
+async function maybeAutoFulfill(order) {
+  const st = fulfillment.supplierStatus();
+  if (!st.auto) return;
+  order.fulfillment = order.fulfillment || { status: 'da_inoltrare' };
+  try {
+    const r = await fulfillment.placeSupplierOrder(order);
+    if (r.ok) { order.fulfillment.status = 'inoltrato'; order.fulfillment.supplierOrderId = r.supplierOrderId || ''; order.fulfillment.error = ''; }
+    else { order.fulfillment.error = r.message || ''; }
+  } catch (e) { order.fulfillment.error = e.message; }
+  save();
+  io.to('admin').emit('order-updated', { id: order.id });
+}
+
 // ---------- Checkout ----------
 app.post('/api/checkout', async (req, res) => {
   try {
@@ -149,7 +165,7 @@ app.post('/api/checkout', async (req, res) => {
       const p = db.products.find(x => x.id === ci.id);
       if (!p) continue;
       const qty = Math.max(1, Math.min(99, parseInt(ci.qty) || 1));
-      items.push({ id: p.id, name: p.name, price: p.price, cost: p.cost || 0, qty });
+      items.push({ id: p.id, name: p.name, price: p.price, cost: p.cost || 0, qty, supplierUrl: p.supplierUrl || '' });
     }
     if (!items.length) return res.status(400).json({ error: 'Prodotti non più disponibili' });
     const total = Math.round(items.reduce((s, it) => s + it.price * it.qty, 0) * 100) / 100;
@@ -166,7 +182,7 @@ app.post('/api/checkout', async (req, res) => {
         zip: (c.zip || '').toString().slice(0, 20),
         note: (c.note || '').toString().slice(0, 500)
       },
-      status: 'pending', ts: Date.now()
+      status: 'pending', fulfillment: { status: 'da_inoltrare' }, ts: Date.now()
     };
     db.orders.push(order);
     save();
@@ -204,7 +220,7 @@ app.get('/api/checkout/verify', async (req, res) => {
   if (stripe && req.query.session_id) {
     try {
       const s = await stripe.checkout.sessions.retrieve(req.query.session_id);
-      if (s.payment_status === 'paid' && order.status === 'pending') { order.status = 'paid'; order.paidAt = Date.now(); save(); io.to('admin').emit('order-paid', { id: order.id }); }
+      if (s.payment_status === 'paid' && order.status === 'pending') { order.status = 'paid'; order.paidAt = Date.now(); save(); io.to('admin').emit('order-paid', { id: order.id }); maybeAutoFulfill(order); }
     } catch (e) { /* ignora */ }
   }
   res.json({ ok: true, demo: !stripe, order: safeOrder(order) });
@@ -233,6 +249,7 @@ app.post('/api/admin/product', admin, (req, res) => {
   p.description = (b.description || '').toString().slice(0, 3000);
   p.category = (b.category || 'Generale').toString().slice(0, 60) || 'Generale';
   p.stock = (b.stock === '' || b.stock == null) ? null : Math.max(0, parseInt(b.stock) || 0);
+  p.supplierUrl = (b.supplierUrl || '').toString().slice(0, 600); // link prodotto AliExpress (fornitore)
   save();
   res.json({ ok: true, product: p });
 });
@@ -251,9 +268,29 @@ app.get('/api/admin/orders', admin, (req, res) => {
 app.post('/api/admin/order/:id', admin, (req, res) => {
   const o = db.orders.find(x => x.id === req.params.id);
   if (!o) return res.status(404).json({ error: 'non trovato' });
-  const st = (req.body && req.body.status || '').toString();
-  if (['pending', 'paid', 'shipped', 'cancelled'].includes(st)) { o.status = st; save(); }
+  const b = req.body || {};
+  const st = (b.status || '').toString();
+  if (['pending', 'paid', 'shipped', 'cancelled'].includes(st)) o.status = st;
+  if (b.fulfillStatus) {
+    o.fulfillment = o.fulfillment || { status: 'da_inoltrare' };
+    if (['da_inoltrare', 'inoltrato', 'pagato', 'spedito', 'errore'].includes(b.fulfillStatus)) o.fulfillment.status = b.fulfillStatus;
+  }
+  if (b.tracking != null) { o.fulfillment = o.fulfillment || { status: 'da_inoltrare' }; o.fulfillment.tracking = b.tracking.toString().slice(0, 120); }
+  save();
   res.json({ ok: true, order: o });
+});
+// Stato del dropshipping automatico (per il banner nel pannello)
+app.get('/api/admin/fulfillment', admin, (req, res) => res.json(fulfillment.supplierStatus()));
+// Inoltro manuale al fornitore (bottone "Ordina dal fornitore" nel pannello)
+app.post('/api/admin/order/:id/fulfill', admin, async (req, res) => {
+  const o = db.orders.find(x => x.id === req.params.id);
+  if (!o) return res.status(404).json({ error: 'non trovato' });
+  o.fulfillment = o.fulfillment || { status: 'da_inoltrare' };
+  const r = await fulfillment.placeSupplierOrder(o);
+  if (r.ok) { o.fulfillment.status = 'inoltrato'; o.fulfillment.supplierOrderId = r.supplierOrderId || ''; o.fulfillment.error = ''; }
+  else { o.fulfillment.error = r.message || ''; }
+  save();
+  res.json({ ok: r.ok, reason: r.reason, message: r.message, order: o });
 });
 
 // ---------- Socket (notifica nuovi ordini all'admin) ----------

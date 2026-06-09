@@ -68,6 +68,7 @@
         <div class="field"><label>Disponibilità <span class="mini">(vuoto = illimitata)</span></label><input id="p_stock" type="number" placeholder="∞"></div>
       </div>
       <div class="field"><label>Link immagine (URL)</label><input id="p_image" placeholder="https://...jpg  (incolla il link della foto del prodotto)"></div>
+      <div class="field"><label>Link fornitore AliExpress <span class="mini">(da dove rifornisci — per il dropshipping)</span></label><input id="p_supplierUrl" placeholder="https://it.aliexpress.com/item/..."></div>
       <div class="field"><label>Descrizione</label><textarea id="p_description" rows="3" placeholder="Descrizione del prodotto..."></textarea></div>
       <div style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="saveProduct()">Salva prodotto</button><button class="btn ghost" id="cancelEdit" style="display:none;flex:0 0 auto;padding-left:20px;padding-right:20px" onclick="resetForm()">Annulla</button></div>
       <p id="prodMsg" class="mini" style="margin-top:8px"></p>
