@@ -36,7 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // (kouverte:shop:db) così i dati del negozio NON si mischiano con quelli della chat.
 // Senza quelle variabili il negozio funziona come prima (solo file locale).
 const DB_FILE = path.join(__dirname, 'data.json');
-let db = { products: [], orders: [] };
+let db = { products: [], orders: [], reviews: [] };
 function uid(p) { return (p || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
 const REDIS_URL    = (process.env.UPSTASH_REDIS_REST_URL   || '').trim().replace(/^["']|["']$/g, '').replace(/\/+$/, '');
@@ -71,7 +71,7 @@ async function load() {
   if (redisEnabled) {
     const fromRedis = await redisGet();
     if (fromRedis && (Array.isArray(fromRedis.products) || Array.isArray(fromRedis.orders))) {
-      db = { products: fromRedis.products || [], orders: fromRedis.orders || [] };
+      db = { products: fromRedis.products || [], orders: fromRedis.orders || [], reviews: fromRedis.reviews || [] };
       try { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); } catch (e) {}
       console.log('[DB] ✅ Ripristinato da Redis: ' + db.products.length + ' prodotti · ' + db.orders.length + ' ordini');
       return;
@@ -80,9 +80,10 @@ async function load() {
   }
   // 2) File locale (o seed iniziale alla prima accensione)
   try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
-  catch (e) { db = { products: [], orders: [] }; seed(); }
+  catch (e) { db = { products: [], orders: [], reviews: [] }; seed(); }
   if (!db.products) db.products = [];
   if (!db.orders) db.orders = [];
+  if (!db.reviews) db.reviews = [];
   // Se Redis è attivo ma era vuoto, salva subito lo stato così diventa durevole.
   if (redisEnabled) redisSet(db).then(ok => console.log(ok ? '[DB] ✅ Stato iniziale salvato su Redis' : '[DB] ⚠️ Salvataggio iniziale su Redis fallito'));
 }
@@ -107,12 +108,36 @@ function seed() {
     { name: '(Esempio) Caricatore USB-C 65W', price: 19.90, cost: 6.00, category: 'Telefonia', description: 'Alimentatore rapido GaN, compatto. (Esempio)' }
   ];
   db.products = ex.map(p => ({ id: uid('p'), image: '', stock: null, ts: Date.now(), ...p }));
+  // Recensioni di ESEMPIO legate ai prodotti di esempio (spariscono quando li cancelli)
+  const day = 86400000;
+  const exRev = [
+    [0, 'Luca M.', 5, 'Suono pulito e batteria che dura. Per questo prezzo non si trova di meglio.', 12],
+    [0, 'Giulia R.', 4, 'Comodi e leggeri, il microfono nelle chiamate è buono. Custodia un po’ grande.', 8],
+    [0, 'Antonio P.', 5, 'Arrivati con tracking, tutto come descritto. Consigliati.', 3],
+    [1, 'Marco B.', 5, 'Carica il telefono 4 volte. Indispensabile in viaggio.', 15],
+    [1, 'Sara T.', 4, 'Un po’ pesante ma la capacità è reale. Ricarica rapida ok.', 6],
+    [2, 'Elena V.', 5, 'Sottile, precisa nei tagli e non ingiallisce. Presa subito la seconda.', 9],
+    [2, 'Davide C.', 4, 'Buona qualità per il prezzo, protegge bene i bordi.', 4],
+    [3, 'Francesca L.', 5, 'Piccolissimo e carica il portatile senza scaldare. Ottimo acquisto.', 11],
+    [3, 'Roberto S.', 5, 'Velocissimo, identico alla descrizione. Spedizione nei tempi.', 5],
+    [3, 'Chiara D.', 4, 'Funziona benissimo con due dispositivi insieme.', 2]
+  ];
+  db.reviews = exRev.map(([i, name, rating, text, d]) => ({
+    id: uid('rev'), productId: db.products[i].id, name, rating, text, ts: Date.now() - d * day, demo: true
+  }));
   save();
+}
+
+// Media voti di un prodotto (calcolata dalle recensioni)
+function ratingOf(pid) {
+  const rs = db.reviews.filter(r => r.productId === pid);
+  if (!rs.length) return { avg: 0, count: 0 };
+  return { avg: Math.round(rs.reduce((s, r) => s + r.rating, 0) / rs.length * 10) / 10, count: rs.length };
 }
 
 // ---------- API pubbliche ----------
 app.get('/api/config', (req, res) => res.json({ shopName: SHOP_NAME, currency: CURRENCY, stripeEnabled: !!stripe }));
-app.get('/api/health', (req, res) => res.json({ ok: true, products: db.products.length, orders: db.orders.length, stripe: !!stripe }));
+app.get('/api/health', (req, res) => res.json({ ok: true, products: db.products.length, orders: db.orders.length, reviews: db.reviews.length, stripe: !!stripe }));
 
 app.get('/api/products', (req, res) => {
   const q = (req.query.q || '').toString().toLowerCase().trim();
@@ -120,12 +145,56 @@ app.get('/api/products', (req, res) => {
   let list = db.products.slice();
   if (cat) list = list.filter(p => p.category === cat);
   if (q) list = list.filter(p => (p.name + ' ' + p.description + ' ' + p.category).toLowerCase().includes(q));
-  res.json({ products: list, categories: [...new Set(db.products.map(p => p.category).filter(Boolean))] });
+  res.json({ products: list.map(p => ({ ...p, rating: ratingOf(p.id) })), categories: [...new Set(db.products.map(p => p.category).filter(Boolean))] });
 });
 app.get('/api/product/:id', (req, res) => {
   const p = db.products.find(x => x.id === req.params.id);
   if (!p) return res.status(404).json({ error: 'non trovato' });
-  res.json({ product: p });
+  res.json({ product: { ...p, rating: ratingOf(p.id) } });
+});
+
+// ---------- Recensioni ----------
+app.get('/api/reviews/:productId', (req, res) => {
+  const list = db.reviews.filter(r => r.productId === req.params.productId).sort((a, b) => b.ts - a.ts);
+  res.json({
+    reviews: list.map(r => ({ id: r.id, name: r.name, rating: r.rating, text: r.text, ts: r.ts })),
+    rating: ratingOf(req.params.productId)
+  });
+});
+// Anti-spam recensioni: throttle per IP + per prodotto/IP + dedup testo
+const _revHits = new Map(); // ip -> [timestamps]
+function reviewGate(req, productId, text) {
+  const ip = (req.headers['x-forwarded-for'] || req.ip || '').toString().split(',')[0].trim() || 'unknown';
+  const now = Date.now();
+  const hits = (_revHits.get(ip) || []).filter(t => now - t < 86400000); // 24h
+  if (hits.length >= 10) return 'Troppe recensioni da questo dispositivo. Riprova più tardi.';
+  if (hits.filter(t => now - t < 60000).length >= 2) return 'Aspetta un attimo prima di lasciare un’altra recensione.';
+  // 1 sola recensione per prodotto da stesso IP nelle ultime 24h
+  const sameProd = db.reviews.filter(r => r.productId === productId && r.ip === ip && now - r.ts < 86400000);
+  if (sameProd.length) return 'Hai già lasciato una recensione per questo prodotto.';
+  // dedup testo identico (anti-bot)
+  const norm = text.toLowerCase().replace(/\s+/g, ' ').trim();
+  if (db.reviews.some(r => r.productId === productId && (r.text || '').toLowerCase().replace(/\s+/g, ' ').trim() === norm)) {
+    return 'Recensione duplicata.';
+  }
+  hits.push(now); _revHits.set(ip, hits);
+  return { ok: true, ip };
+}
+app.post('/api/review', (req, res) => {
+  const b = req.body || {};
+  const p = db.products.find(x => x.id === b.productId);
+  if (!p) return res.status(404).json({ error: 'Prodotto non trovato' });
+  const rating = parseInt(b.rating);
+  const name = (b.name || '').toString().trim().slice(0, 60);
+  const text = (b.text || '').toString().trim().slice(0, 600);
+  if (!name || !text || !(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'Compila nome, voto (1–5) e commento' });
+  if (text.length < 10) return res.status(400).json({ error: 'Scrivi almeno qualche parola in più nel commento.' });
+  const gate = reviewGate(req, p.id, text);
+  if (gate !== true && !gate.ok) return res.status(429).json({ error: gate });
+  const rev = { id: uid('rev'), productId: p.id, name, rating, text, ts: Date.now(), ip: gate.ip };
+  db.reviews.push(rev);
+  save();
+  res.json({ ok: true, review: { id: rev.id, name: rev.name, rating: rev.rating, text: rev.text, ts: rev.ts } });
 });
 
 function baseUrl(req) {
@@ -256,8 +325,21 @@ app.post('/api/admin/product', admin, (req, res) => {
 app.delete('/api/admin/product/:id', admin, (req, res) => {
   const n = db.products.length;
   db.products = db.products.filter(p => p.id !== req.params.id);
+  db.reviews = db.reviews.filter(r => r.productId !== req.params.id); // via anche le sue recensioni
   save();
   res.json({ ok: true, removed: n - db.products.length });
+});
+app.get('/api/admin/reviews', admin, (req, res) => {
+  const list = db.reviews.slice().sort((a, b) => b.ts - a.ts).map(r => ({
+    ...r, productName: (db.products.find(p => p.id === r.productId) || {}).name || '(prodotto eliminato)'
+  }));
+  res.json({ reviews: list });
+});
+app.delete('/api/admin/review/:id', admin, (req, res) => {
+  const n = db.reviews.length;
+  db.reviews = db.reviews.filter(r => r.id !== req.params.id);
+  save();
+  res.json({ ok: true, removed: n - db.reviews.length });
 });
 app.get('/api/admin/orders', admin, (req, res) => {
   const orders = db.orders.slice().sort((a, b) => b.ts - a.ts);

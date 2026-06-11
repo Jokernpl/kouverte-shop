@@ -33,11 +33,39 @@ function connectSocket() {
 function showTab(t) {
   $('#tabProd').classList.toggle('on', t === 'prod');
   $('#tabOrd').classList.toggle('on', t === 'ord');
+  $('#tabRev').classList.toggle('on', t === 'rev');
   $('#viewProd').style.display = t === 'prod' ? 'block' : 'none';
   $('#viewOrd').style.display = t === 'ord' ? 'block' : 'none';
+  $('#viewRev').style.display = t === 'rev' ? 'block' : 'none';
 }
 
-async function loadAll() { await Promise.all([loadProducts(), loadOrders()]); }
+async function loadAll() { await Promise.all([loadProducts(), loadOrders(), loadReviewsAdm()]); }
+
+async function loadReviewsAdm() {
+  const r = await fetch('/api/admin/reviews', { headers: H() });
+  if (!r.ok) return;
+  const list = (await r.json()).reviews || [];
+  $('#revCount').textContent = list.length;
+  const box = $('#revListAdm');
+  if (!list.length) { box.innerHTML = '<p class="mini">Nessuna recensione ancora.</p>'; return; }
+  box.innerHTML = '';
+  list.forEach(rv => {
+    const row = document.createElement('div');
+    row.className = 'prow';
+    row.innerHTML = `
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600"><span style="color:#f59e0b">${'★'.repeat(rv.rating)}${'☆'.repeat(5 - rv.rating)}</span> ${esc(rv.name)} <span class="mini">su “${esc(rv.productName)}” · ${new Date(rv.ts).toLocaleDateString('it-IT')}${rv.demo ? ' · (esempio)' : ''}</span></div>
+        <div class="mini">${esc(rv.text)}</div>
+      </div>
+      <button class="btn small danger" data-del style="flex:0 0 auto;width:auto">🗑</button>`;
+    row.querySelector('[data-del]').onclick = async () => {
+      if (!confirm('Eliminare questa recensione?')) return;
+      await fetch('/api/admin/review/' + rv.id, { method: 'DELETE', headers: H() });
+      toast('Recensione eliminata'); loadReviewsAdm();
+    };
+    box.appendChild(row);
+  });
+}
 
 async function loadProducts() {
   const r = await fetch('/api/admin/products', { headers: H() });

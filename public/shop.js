@@ -56,6 +56,7 @@ function renderGrid(list) {
       <div class="info">
         <div class="cat">${esc(p.category || '')}</div>
         <div class="name">${esc(p.name)}</div>
+        ${p.rating && p.rating.count ? `<div class="rstars">${starsHtml(p.rating.avg)}<span>${num1(p.rating.avg)} (${p.rating.count})</span></div>` : ''}
         <div class="row">
           <span class="price">${money(p.price)}</span>
           ${sold ? '<span class="soldout">Esaurito</span>' : `<button class="add">+ Aggiungi</button>`}
@@ -69,6 +70,8 @@ function renderGrid(list) {
   });
 }
 function esc(s) { return (s || '').toString().replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function starsHtml(avg) { const f = Math.round(avg || 0); return '<span class="stars">' + '★'.repeat(f) + '☆'.repeat(5 - f) + '</span>'; }
+const num1 = n => (Math.round((n || 0) * 10) / 10).toFixed(1).replace('.', ',');
 
 // ---- product modal ----
 function openProduct(id) {
@@ -81,10 +84,61 @@ function openProduct(id) {
   const btn = $('#pmAdd');
   btn.style.display = p.stock === 0 ? 'none' : 'block';
   btn.onclick = () => { addToCart(p.id); closeProduct(); };
+  loadReviews(p.id);
   $('#pmodal').classList.add('on');
 }
 function closeProduct() { $('#pmodal').classList.remove('on'); }
 $('#pmodal').onclick = closeProduct;
+
+// ---- recensioni ----
+let rvStars = 0, rvPid = null;
+function renderStarPick() {
+  $('#starPick').innerHTML = [1, 2, 3, 4, 5].map(i => `<button type="button" data-s="${i}" class="${i <= rvStars ? 'on' : ''}">★</button>`).join('');
+  $('#starPick').querySelectorAll('button').forEach(b => b.onclick = () => { rvStars = +b.dataset.s; renderStarPick(); });
+}
+async function loadReviews(pid) {
+  rvPid = pid; rvStars = 0; renderStarPick();
+  $('#rv_name').value = ''; $('#rv_text').value = '';
+  $('#revList').innerHTML = ''; $('#revSummary').textContent = ''; $('#pmStars').innerHTML = '';
+  try {
+    const d = await (await fetch('/api/reviews/' + encodeURIComponent(pid))).json();
+    const list = d.reviews || [];
+    const noun = n => n === 1 ? 'recensione' : 'recensioni';
+    $('#pmStars').innerHTML = list.length ? `${starsHtml(d.rating.avg)}<span>${num1(d.rating.avg)} su 5 · ${list.length} ${noun(list.length)}</span>` : '';
+    $('#revSummary').textContent = list.length ? `· media ${num1(d.rating.avg)}/5` : '· ancora nessuna: sii il primo!';
+    $('#revList').innerHTML = list.slice(0, 25).map(r => `
+      <div class="rev">
+        <div class="rev-head"><b>${esc(r.name)}</b> ${starsHtml(r.rating)} <span class="rev-date">${new Date(r.ts).toLocaleDateString('it-IT')}</span></div>
+        <div class="rev-text">${esc(r.text)}</div>
+      </div>`).join('');
+  } catch (e) {}
+}
+$('#rvSend').onclick = async () => {
+  const name = $('#rv_name').value.trim(), text = $('#rv_text').value.trim();
+  if (!rvStars) return toast('Scegli un voto da 1 a 5 stelle');
+  if (!name || !text) return toast('Scrivi nome e commento');
+  const btn = $('#rvSend'); btn.disabled = true;
+  try {
+    const r = await fetch('/api/review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productId: rvPid, name, rating: rvStars, text }) });
+    const d = await r.json();
+    if (d.ok) { toast('Grazie per la recensione! ⭐'); await loadReviews(rvPid); await loadProducts(); }
+    else toast(d.error || 'Errore');
+  } catch (e) { toast('Errore di rete'); }
+  btn.disabled = false;
+};
+
+// ---- pagine info (footer) ----
+const INFO = {
+  spedizioni: { t: '🚚 Spedizioni e consegna', b: 'Spedizione tracciata in tutta Italia: ricevi il codice di tracking via email appena il pacco parte.\n\nI tempi di consegna sono indicati su ogni prodotto: in genere 7–15 giorni lavorativi, perché spediamo direttamente dai magazzini dei nostri fornitori partner — è così che riusciamo a tenere i prezzi bassi.\n\nSe l’ordine tarda oltre i tempi indicati, scrivici: lo rintracciamo o ti rimborsiamo.' },
+  resi: { t: '↩️ Resi e rimborsi', b: 'Hai 14 giorni dalla consegna per cambiare idea, come previsto dal diritto di recesso (D.lgs. 21/2014).\n\nContattaci indicando il numero d’ordine, rispedisci il prodotto integro e ricevi il rimborso completo con lo stesso metodo di pagamento entro 14 giorni dal reso.\n\nProdotto difettoso o danneggiato? Il reso è a carico nostro.' },
+  garanzia: { t: '🛡️ Garanzia 24 mesi', b: 'Tutti i prodotti sono coperti dalla garanzia legale di conformità di 24 mesi prevista dal Codice del Consumo.\n\nSe un prodotto presenta un difetto, contattaci con foto e numero d’ordine: lo sostituiamo o ti rimborsiamo.' },
+  pagamenti: { t: '🔒 Pagamenti sicuri', b: 'I pagamenti con carta avvengono su pagina protetta Stripe, lo stesso circuito usato dai grandi e-commerce: i dati della tua carta non passano e non vengono mai salvati sui nostri server.\n\nAccettiamo Visa, Mastercard, American Express. La connessione al sito è cifrata (SSL/HTTPS).' },
+  chisiamo: { t: '🛍️ Chi siamo', b: 'Kouverte Elettronica è un negozio online italiano indipendente specializzato in telefonia e accessori.\n\nSelezioniamo i prodotti dai migliori fornitori e li proponiamo al giusto prezzo, con spedizione tracciata, reso facile e garanzia di 24 mesi.\n\nPer qualsiasi domanda rispondiamo via email, di solito entro 24 ore.' },
+  privacy: { t: '🔐 Privacy', b: 'Usiamo i tuoi dati (nome, indirizzo, email, telefono) solo per evadere e spedire il tuo ordine.\n\nNon vendiamo né cediamo i dati a terzi per scopi pubblicitari. I pagamenti sono gestiti da Stripe: i dati della carta non transitano sui nostri server.\n\nPuoi chiedere in qualsiasi momento la modifica o cancellazione dei tuoi dati scrivendoci.' }
+};
+function openInfo(k) { const i = INFO[k]; if (!i) return; $('#imTitle').textContent = i.t; $('#imBody').textContent = i.b; $('#imodal').classList.add('on'); }
+function closeInfo() { $('#imodal').classList.remove('on'); }
+$('#imodal').onclick = closeInfo;
 
 // ---- cart ----
 function addToCart(id) { CART[id] = (CART[id] || 0) + 1; saveCart(); toast('Aggiunto al carrello ✓'); }

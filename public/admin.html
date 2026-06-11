@@ -51,6 +51,7 @@
   <div class="tabs">
     <button class="tab on" id="tabProd" onclick="showTab('prod')">📦 Prodotti</button>
     <button class="tab" id="tabOrd" onclick="showTab('ord')">🧾 Ordini <span id="ordBadge"></span></button>
+    <button class="tab" id="tabRev" onclick="showTab('rev')">⭐ Recensioni</button>
   </div>
 
   <!-- PRODOTTI -->
@@ -84,6 +85,15 @@
     <div class="panel">
       <h3 style="margin:0 0 6px">Ordini ricevuti</h3>
       <div id="ordList"></div>
+    </div>
+  </div>
+
+  <!-- RECENSIONI -->
+  <div id="viewRev" style="display:none">
+    <div class="panel">
+      <h3 style="margin:0 0 6px">Recensioni dei clienti (<span id="revCount">0</span>)</h3>
+      <p class="mini" style="margin:0 0 10px">Le recensioni compaiono sulla pagina del prodotto. Puoi eliminare quelle inappropriate.</p>
+      <div id="revListAdm"></div>
     </div>
   </div>
 </div>

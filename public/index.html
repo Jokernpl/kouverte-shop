@@ -21,12 +21,48 @@
   <div class="cats" id="cats"></div>
 </header>
 
+<!-- Barra fiducia -->
+<div class="trustbar">
+  <div class="trust-in">
+    <div class="titem">🚚 <div><b>Spedizione tracciata</b><span>in tutta Italia</span></div></div>
+    <div class="titem">🔒 <div><b>Pagamenti sicuri</b><span>carta · circuito Stripe</span></div></div>
+    <div class="titem">↩️ <div><b>Reso facile</b><span>entro 14 giorni</span></div></div>
+    <div class="titem">🛡️ <div><b>Garanzia 24 mesi</b><span>garanzia legale</span></div></div>
+  </div>
+</div>
+
 <main class="wrap">
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" style="display:none"><h3>Nessun prodotto</h3><p>Aggiungi i tuoi prodotti dal <a href="/admin.html" style="color:var(--brand);font-weight:700">pannello admin</a>.</p></div>
 </main>
 
-<div class="foot">Pagamenti sicuri · <a href="/admin.html" style="color:var(--muted)">Area gestione</a></div>
+<footer class="bigfoot">
+  <div class="bf-in">
+    <div class="bf-col">
+      <div class="logo" style="font-size:17px"><span class="dot">🛍️</span> Kouverte Elettronica</div>
+      <p>Telefonia e accessori ai migliori prezzi. Spedizione tracciata in tutta Italia, pagamenti protetti e assistenza rapida via email.</p>
+    </div>
+    <div class="bf-col">
+      <b>Assistenza</b>
+      <a href="#" onclick="openInfo('spedizioni');return false">Spedizioni e consegna</a>
+      <a href="#" onclick="openInfo('resi');return false">Resi e rimborsi</a>
+      <a href="#" onclick="openInfo('garanzia');return false">Garanzia 24 mesi</a>
+      <a href="#" onclick="openInfo('pagamenti');return false">Pagamenti sicuri</a>
+    </div>
+    <div class="bf-col">
+      <b>Negozio</b>
+      <a href="#" onclick="openInfo('chisiamo');return false">Chi siamo</a>
+      <a href="#" onclick="openInfo('privacy');return false">Privacy</a>
+      <a href="/admin.html">Area gestione</a>
+    </div>
+    <div class="bf-col">
+      <b>Pagamenti accettati</b>
+      <div class="paybadges"><span>VISA</span><span>Mastercard</span><span>AmEx</span><span>Stripe</span></div>
+      <div class="ssl">🔒 Connessione sicura SSL</div>
+    </div>
+  </div>
+  <div class="bf-bottom">© 2026 Kouverte Elettronica — Tutti i diritti riservati</div>
+</footer>
 
 <!-- Product modal -->
 <div class="scrim pmodal" id="pmodal">
@@ -35,9 +71,36 @@
     <div class="pm-body">
       <div class="card-cat" style="color:var(--brand);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.6px" id="pmCat"></div>
       <h2 id="pmName" style="margin:6px 0"></h2>
-      <div class="price" id="pmPrice" style="font-size:26px"></div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="price" id="pmPrice" style="font-size:26px"></div>
+        <div class="rstars" id="pmStars"></div>
+      </div>
       <div class="pm-desc" id="pmDesc"></div>
       <button class="btn" id="pmAdd">Aggiungi al carrello</button>
+
+      <!-- Recensioni -->
+      <div class="rev-sec">
+        <h3 style="margin:0 0 4px;font-size:16px">⭐ Recensioni <span class="rev-sum" id="revSummary"></span></h3>
+        <div id="revList"></div>
+        <div class="rev-form">
+          <b style="font-size:14px">Lascia una recensione</b>
+          <div class="starpick" id="starPick"></div>
+          <input id="rv_name" placeholder="Il tuo nome" maxlength="60">
+          <textarea id="rv_text" rows="2" placeholder="Com’è andata? Racconta la tua esperienza…" maxlength="600"></textarea>
+          <button class="btn" id="rvSend" style="padding:11px;font-size:14px">Invia recensione</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale info (spedizioni, resi, garanzia, privacy...) -->
+<div class="scrim pmodal" id="imodal">
+  <div class="drawer" onclick="event.stopPropagation()" style="width:520px">
+    <div class="pm-body">
+      <h2 id="imTitle" style="margin:0 0 10px"></h2>
+      <div class="pm-desc" id="imBody" style="margin:0"></div>
+      <button class="btn ghost" onclick="closeInfo()" style="margin-top:14px">Chiudi</button>
     </div>
   </div>
 </div>
