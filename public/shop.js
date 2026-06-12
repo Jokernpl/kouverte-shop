@@ -14,13 +14,19 @@ function prod(id) { return PRODUCTS.find(p => p.id === id); }
 async function boot() {
   try { CFG = await (await fetch('/api/config')).json(); } catch (e) {}
   document.title = CFG.shopName;
-  $('#shopName').textContent = CFG.shopName;
-  $('.logo .dot') && ($('.logo .dot').textContent = '🛍️');
+  populateTicker();
   await loadProducts();
+  const hc = $('#heroCount'); if (hc) hc.textContent = PRODUCTS.length || '—';
   renderCartCount();
   // success/cancel banners
   const u = new URLSearchParams(location.search);
   if (u.get('canceled')) toast('Pagamento annullato — il carrello è ancora qui');
+}
+function populateTicker() {
+  const t = $('#tickerTrack'); if (!t) return;
+  const items = ['🚚 Spedizione tracciata in tutta Italia', '🔒 Pagamenti sicuri e cifrati', '↩️ Reso facile entro 14 giorni', '🛡️ Garanzia 24 mesi', '⭐ Migliaia di clienti soddisfatti', '💜 Assistenza rapida via email'];
+  const html = items.map(i => `<span>${i}</span>`).join('');
+  t.innerHTML = html + html; // duplicato per scorrimento continuo
 }
 async function loadProducts() {
   try {
@@ -44,15 +50,23 @@ function renderCats(cats) {
   el.appendChild(mk('Tutto', ''));
   cats.forEach(c => el.appendChild(mk(c, c)));
 }
+function pimg(p) { return (p.images && p.images.length ? p.images[0] : p.image) || ''; }
 function renderGrid(list) {
   const g = $('#grid'); g.innerHTML = '';
   $('#empty').style.display = list.length ? 'none' : 'block';
-  list.forEach(p => {
+  list.forEach((p, i) => {
     const sold = p.stock === 0;
+    const img = pimg(p);
+    const hot = (p.rating && p.rating.count >= 3) || i < 2;
     const card = document.createElement('div');
     card.className = 'card';
+    card.style.animationDelay = (i * 55) + 'ms';
     card.innerHTML = `
-      <div class="thumb">${p.image ? `<img src="${esc(p.image)}" onerror="this.remove()">` : '📦'}</div>
+      <div class="thumb">
+        ${hot ? '<span class="card-badge">🔥 Top</span>' : ''}
+        <span class="card-ship">🚚 Spedizione gratis</span>
+        ${img ? `<img src="${esc(img)}" loading="lazy" onerror="this.remove()">` : '📦'}
+      </div>
       <div class="info">
         <div class="cat">${esc(p.category || '')}</div>
         <div class="name">${esc(p.name)}</div>
@@ -62,8 +76,7 @@ function renderGrid(list) {
           ${sold ? '<span class="soldout">Esaurito</span>' : `<button class="add">+ Aggiungi</button>`}
         </div>
       </div>`;
-    card.querySelector('.thumb').onclick = () => openProduct(p.id);
-    card.querySelector('.name').onclick = () => openProduct(p.id);
+    card.onclick = () => openProduct(p.id);
     const add = card.querySelector('.add');
     if (add) add.onclick = (e) => { e.stopPropagation(); addToCart(p.id); };
     g.appendChild(card);
@@ -74,9 +87,22 @@ function starsHtml(avg) { const f = Math.round(avg || 0); return '<span class="s
 const num1 = n => (Math.round((n || 0) * 10) / 10).toFixed(1).replace('.', ',');
 
 // ---- product modal ----
+function setMainImg(url) {
+  $('#pmImg').innerHTML = url ? `<img src="${esc(url)}" onerror="this.parentElement.textContent='📦'">` : '📦';
+}
 function openProduct(id) {
   const p = prod(id); if (!p) return;
-  $('#pmImg').innerHTML = p.image ? `<img src="${esc(p.image)}" onerror="this.parentElement.textContent='📦'">` : '📦';
+  const imgs = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+  setMainImg(imgs[0] || '');
+  const gal = $('#pmGallery');
+  if (imgs.length > 1) {
+    gal.innerHTML = imgs.map((u, i) => `<div class="pm-thumb${i === 0 ? ' on' : ''}"><img src="${esc(u)}" loading="lazy" onerror="this.parentElement.remove()"></div>`).join('');
+    gal.querySelectorAll('.pm-thumb').forEach((t, i) => t.onclick = () => {
+      setMainImg(imgs[i]);
+      gal.querySelectorAll('.pm-thumb').forEach(x => x.classList.remove('on'));
+      t.classList.add('on');
+    });
+  } else gal.innerHTML = '';
   $('#pmCat').textContent = p.category || '';
   $('#pmName').textContent = p.name;
   $('#pmPrice').textContent = money(p.price);
@@ -141,7 +167,10 @@ function closeInfo() { $('#imodal').classList.remove('on'); }
 $('#imodal').onclick = closeInfo;
 
 // ---- cart ----
-function addToCart(id) { CART[id] = (CART[id] || 0) + 1; saveCart(); toast('Aggiunto al carrello ✓'); }
+function addToCart(id) {
+  CART[id] = (CART[id] || 0) + 1; saveCart(); toast('Aggiunto al carrello ✓');
+  const b = $('#cartBtn'); if (b) { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
+}
 function setQty(id, q) { if (q <= 0) delete CART[id]; else CART[id] = q; saveCart(); renderCart(); }
 function cartList() { return Object.keys(CART).map(id => ({ p: prod(id), qty: CART[id] })).filter(x => x.p); }
 function cartTotal() { return cartList().reduce((s, x) => s + x.p.price * x.qty, 0); }

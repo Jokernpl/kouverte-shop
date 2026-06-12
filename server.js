@@ -15,6 +15,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const SHOP_NAME = process.env.SHOP_NAME || 'Kouverte Elettronica';
 const CURRENCY = (process.env.CURRENCY || 'eur').toLowerCase();
 const fulfillment = require('./fulfillment'); // evasione/dropshipping (AliExpress)
+const importer = require('./importer');       // import prodotti da link AliExpress
 
 // --- Stripe (attivo solo se imposti STRIPE_SECRET_KEY) ---
 let stripe = null;
@@ -306,6 +307,11 @@ app.post('/api/admin/login', (req, res) => {
   res.status(401).json({ error: 'Password errata' });
 });
 app.get('/api/admin/products', admin, (req, res) => res.json({ products: db.products }));
+// Import prodotto da link AliExpress (nome + foto + link fornitore; prezzo lo imposti tu)
+app.post('/api/admin/import', admin, async (req, res) => {
+  try { res.json(await importer.importFromAliExpress((req.body && req.body.url) || '')); }
+  catch (e) { res.status(500).json({ ok: false, error: 'Errore import: ' + e.message }); }
+});
 app.post('/api/admin/product', admin, (req, res) => {
   const b = req.body || {};
   if (!b.name || !(parseFloat(b.price) >= 0)) return res.status(400).json({ error: 'Nome e prezzo obbligatori' });
@@ -315,6 +321,10 @@ app.post('/api/admin/product', admin, (req, res) => {
   p.price = Math.max(0, parseFloat(b.price) || 0);
   p.cost = (b.cost === '' || b.cost == null) ? null : Math.max(0, parseFloat(b.cost) || 0);
   p.image = (b.image || '').toString().slice(0, 600);
+  p.images = (Array.isArray(b.images) ? b.images : (b.images || '').toString().split(/[\n,]/))
+    .map(s => s.toString().trim()).filter(Boolean).slice(0, 10);
+  if (!p.image && p.images.length) p.image = p.images[0];
+  if (p.image && !p.images.includes(p.image)) p.images.unshift(p.image);
   p.description = (b.description || '').toString().slice(0, 3000);
   p.category = (b.category || 'Generale').toString().slice(0, 60) || 'Generale';
   p.stock = (b.stock === '' || b.stock == null) ? null : Math.max(0, parseInt(b.stock) || 0);

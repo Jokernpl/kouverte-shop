@@ -4,79 +4,73 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Kouverte Elettronica</title>
-<meta name="description" content="Negozio online — telefonia, accessori e tanto altro. Spedizione veloce, pagamenti sicuri.">
-<link rel="stylesheet" href="style.css?v=1">
+<meta name="description" content="Kouverte — tutto quello che cerchi, ai prezzi che sorprendono. Spedizione tracciata, pagamenti sicuri, reso facile.">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
 <header class="top">
   <div class="top-in">
-    <div class="logo"><span class="dot">🛍️</span><span id="shopName">Kouverte Elettronica</span></div>
+    <div class="logo"><span class="dot">K</span><span id="shopName">Kouverte</span></div>
     <div class="search">
       <span>🔎</span>
-      <input id="q" placeholder="Cerca un prodotto..." autocomplete="off">
+      <input id="q" placeholder="Cerca tra migliaia di prodotti..." autocomplete="off">
     </div>
-    <button class="cart-btn" onclick="openCart()">🛒 Carrello<span class="badge" id="cartCount">0</span></button>
+    <button class="cart-btn" id="cartBtn" onclick="openCart()">🛒<span class="cart-lbl"> Carrello</span><span class="badge" id="cartCount">0</span></button>
   </div>
   <div class="cats" id="cats"></div>
 </header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="hero-in">
+    <div class="hero-badge">✦ Nuova collezione · spedizione tracciata</div>
+    <h1>Tutto quello che cerchi,<br><span>ai prezzi che sorprendono.</span></h1>
+    <p>Migliaia di prodotti selezionati, consegnati a casa tua. Paga in sicurezza, ricevi con tracking, reso facile entro 14 giorni.</p>
+    <div class="hero-cta">
+      <button class="btn hero-btn" onclick="document.querySelector('.wrap').scrollIntoView({behavior:'smooth'})">Scopri le offerte →</button>
+      <div class="hero-stats"><b id="heroCount">—</b> prodotti · <b>4,7★</b> recensioni</div>
+    </div>
+  </div>
+</section>
+
+<!-- Ticker -->
+<div class="ticker"><div class="ticker-track" id="tickerTrack"></div></div>
 
 <!-- Barra fiducia -->
 <div class="trustbar">
   <div class="trust-in">
     <div class="titem">🚚 <div><b>Spedizione tracciata</b><span>in tutta Italia</span></div></div>
-    <div class="titem">🔒 <div><b>Pagamenti sicuri</b><span>carta · circuito Stripe</span></div></div>
+    <div class="titem">🔒 <div><b>Pagamenti sicuri</b><span>protetti e cifrati</span></div></div>
     <div class="titem">↩️ <div><b>Reso facile</b><span>entro 14 giorni</span></div></div>
     <div class="titem">🛡️ <div><b>Garanzia 24 mesi</b><span>garanzia legale</span></div></div>
   </div>
 </div>
 
 <main class="wrap">
+  <div class="sec-head"><h2>🔥 I più amati</h2><span class="mini">Selezionati per te</span></div>
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" style="display:none"><h3>Nessun prodotto</h3><p>Aggiungi i tuoi prodotti dal <a href="/admin.html" style="color:var(--brand);font-weight:700">pannello admin</a>.</p></div>
 </main>
-
-<footer class="bigfoot">
-  <div class="bf-in">
-    <div class="bf-col">
-      <div class="logo" style="font-size:17px"><span class="dot">🛍️</span> Kouverte Elettronica</div>
-      <p>Telefonia e accessori ai migliori prezzi. Spedizione tracciata in tutta Italia, pagamenti protetti e assistenza rapida via email.</p>
-    </div>
-    <div class="bf-col">
-      <b>Assistenza</b>
-      <a href="#" onclick="openInfo('spedizioni');return false">Spedizioni e consegna</a>
-      <a href="#" onclick="openInfo('resi');return false">Resi e rimborsi</a>
-      <a href="#" onclick="openInfo('garanzia');return false">Garanzia 24 mesi</a>
-      <a href="#" onclick="openInfo('pagamenti');return false">Pagamenti sicuri</a>
-    </div>
-    <div class="bf-col">
-      <b>Negozio</b>
-      <a href="#" onclick="openInfo('chisiamo');return false">Chi siamo</a>
-      <a href="#" onclick="openInfo('privacy');return false">Privacy</a>
-      <a href="/admin.html">Area gestione</a>
-    </div>
-    <div class="bf-col">
-      <b>Pagamenti accettati</b>
-      <div class="paybadges"><span>VISA</span><span>Mastercard</span><span>AmEx</span><span>Stripe</span></div>
-      <div class="ssl">🔒 Connessione sicura SSL</div>
-    </div>
-  </div>
-  <div class="bf-bottom">© 2026 Kouverte Elettronica — Tutti i diritti riservati</div>
-</footer>
 
 <!-- Product modal -->
 <div class="scrim pmodal" id="pmodal">
   <div class="drawer" onclick="event.stopPropagation()">
     <div class="pm-img" id="pmImg">📦</div>
+    <div class="pm-gallery" id="pmGallery"></div>
     <div class="pm-body">
       <div class="card-cat" style="color:var(--brand);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.6px" id="pmCat"></div>
       <h2 id="pmName" style="margin:6px 0"></h2>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div class="price" id="pmPrice" style="font-size:26px"></div>
+        <div class="price" id="pmPrice" style="font-size:28px"></div>
         <div class="rstars" id="pmStars"></div>
       </div>
+      <div class="pm-perks">
+        <span>🚚 Spedizione tracciata</span><span>🔒 Pagamento sicuro</span><span>↩️ Reso 14 giorni</span>
+      </div>
       <div class="pm-desc" id="pmDesc"></div>
-      <button class="btn" id="pmAdd">Aggiungi al carrello</button>
+      <button class="btn pulse" id="pmAdd">Aggiungi al carrello</button>
 
       <!-- Recensioni -->
       <div class="rev-sec">
@@ -139,15 +133,44 @@
         <div class="totrow"><span>Totale da pagare</span><b id="coTotal">€0,00</b></div>
         <button class="btn" id="payBtn">Paga ora</button>
         <button class="btn ghost" style="margin-top:8px" onclick="showCartView()">← Torna al carrello</button>
-        <div class="secure" id="secureLine">🔒 Pagamento sicuro con Stripe</div>
+        <div class="secure" id="secureLine">🔒 Pagamento sicuro con carta</div>
         <div class="note-pay" id="payNote"></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Footer -->
+<footer class="bigfoot">
+  <div class="bf-in">
+    <div class="bf-col">
+      <div class="logo" style="font-size:18px"><span class="dot">K</span> Kouverte</div>
+      <p>Tutto quello che cerchi, ai prezzi che sorprendono. Spedizione tracciata in tutta Italia, pagamenti protetti e assistenza rapida via email.</p>
+    </div>
+    <div class="bf-col">
+      <b>Assistenza</b>
+      <a href="#" onclick="openInfo('spedizioni');return false">Spedizioni e consegna</a>
+      <a href="#" onclick="openInfo('resi');return false">Resi e rimborsi</a>
+      <a href="#" onclick="openInfo('garanzia');return false">Garanzia 24 mesi</a>
+      <a href="#" onclick="openInfo('pagamenti');return false">Pagamenti sicuri</a>
+    </div>
+    <div class="bf-col">
+      <b>Negozio</b>
+      <a href="#" onclick="openInfo('chisiamo');return false">Chi siamo</a>
+      <a href="#" onclick="openInfo('privacy');return false">Privacy</a>
+      <a href="/admin.html">Area gestione</a>
+    </div>
+    <div class="bf-col">
+      <b>Pagamenti accettati</b>
+      <div class="paybadges"><span>VISA</span><span>Mastercard</span><span>AmEx</span><span>ApplePay</span></div>
+      <div class="ssl">🔒 Connessione sicura SSL</div>
+    </div>
+  </div>
+  <div class="bf-bottom">© 2026 Kouverte — Tutti i diritti riservati</div>
+</footer>
+
 <div class="toast" id="toast"></div>
 <script src="/socket.io/socket.io.js"></script>
-<script src="shop.js?v=1"></script>
+<script src="shop.js?v=2"></script>
 </body>
 </html>

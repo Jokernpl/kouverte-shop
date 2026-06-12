@@ -94,23 +94,56 @@ async function loadProducts() {
     box.appendChild(row);
   });
 }
+function imgList() { return $('#p_images').value.split(/[\n,]/).map(s => s.trim()).filter(Boolean); }
+function renderImgPreview() {
+  $('#p_imgPreview').innerHTML = imgList().slice(0, 8).map(u =>
+    `<img src="${esc(u)}" onerror="this.style.display='none'" style="width:54px;height:54px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">`).join('');
+}
 function editProduct(p) {
   $('#p_id').value = p.id; $('#p_name').value = p.name; $('#p_category').value = p.category || '';
   $('#p_price').value = p.price; $('#p_cost').value = p.cost != null ? p.cost : '';
-  $('#p_stock').value = p.stock != null ? p.stock : ''; $('#p_image').value = p.image || ''; $('#p_description').value = p.description || '';
+  $('#p_stock').value = p.stock != null ? p.stock : '';
+  $('#p_images').value = ((p.images && p.images.length) ? p.images : (p.image ? [p.image] : [])).join('\n');
+  $('#p_description').value = p.description || '';
   $('#p_supplierUrl').value = p.supplierUrl || '';
+  renderImgPreview();
   $('#formTitle').textContent = '✏️ Modifica prodotto'; $('#cancelEdit').style.display = 'inline-block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function resetForm() {
-  ['p_id', 'p_name', 'p_category', 'p_price', 'p_cost', 'p_stock', 'p_image', 'p_description', 'p_supplierUrl'].forEach(i => $('#' + i).value = '');
+  ['p_id', 'p_name', 'p_category', 'p_price', 'p_cost', 'p_stock', 'p_images', 'p_description', 'p_supplierUrl', 'imp_url'].forEach(i => $('#' + i).value = '');
+  $('#p_imgPreview').innerHTML = ''; $('#impMsg').textContent = '';
   $('#formTitle').textContent = '➕ Aggiungi prodotto'; $('#cancelEdit').style.display = 'none'; $('#prodMsg').textContent = '';
+}
+async function importFromAli() {
+  const url = $('#imp_url').value.trim();
+  if (!url) return toast('Incolla prima un link');
+  const btn = $('#impBtn'); btn.disabled = true; const old = btn.textContent; btn.textContent = 'Importo…';
+  $('#impMsg').style.color = 'var(--muted)'; $('#impMsg').textContent = 'Scarico i dati del prodotto…';
+  try {
+    const r = await fetch('/api/admin/import', { method: 'POST', headers: H(), body: JSON.stringify({ url }) });
+    const d = await r.json();
+    if (d.ok) {
+      $('#p_name').value = d.product.name || '';
+      $('#p_images').value = (d.product.images || []).join('\n');
+      $('#p_supplierUrl').value = d.product.supplierUrl || '';
+      if (d.product.description) $('#p_description').value = d.product.description;
+      renderImgPreview();
+      $('#impMsg').style.color = 'var(--ok)';
+      $('#impMsg').textContent = '✓ Importato! ' + (d.note || 'Imposta il prezzo e salva.');
+      $('#p_price').focus();
+    } else {
+      if (d.supplierUrl) $('#p_supplierUrl').value = d.supplierUrl;
+      $('#impMsg').style.color = 'var(--bad)'; $('#impMsg').textContent = '⚠️ ' + (d.error || 'Import non riuscito');
+    }
+  } catch (e) { $('#impMsg').style.color = 'var(--bad)'; $('#impMsg').textContent = 'Errore di rete'; }
+  btn.disabled = false; btn.textContent = old;
 }
 async function saveProduct() {
   const body = {
     id: $('#p_id').value || undefined, name: $('#p_name').value.trim(), category: $('#p_category').value.trim(),
     price: $('#p_price').value, cost: $('#p_cost').value, stock: $('#p_stock').value,
-    image: $('#p_image').value.trim(), description: $('#p_description').value.trim(),
+    images: imgList(), description: $('#p_description').value.trim(),
     supplierUrl: $('#p_supplierUrl').value.trim()
   };
   if (!body.name || !(parseFloat(body.price) >= 0)) { $('#prodMsg').textContent = '⚠️ Nome e prezzo sono obbligatori.'; return; }

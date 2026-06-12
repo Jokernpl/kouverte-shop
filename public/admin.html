@@ -56,6 +56,15 @@
 
   <!-- PRODOTTI -->
   <div id="viewProd">
+    <div class="panel" style="background:linear-gradient(135deg,#eef2ff,#faf5ff);border-color:#ddd6fe">
+      <h3 style="margin:0 0 6px">⚡ Importa con un link</h3>
+      <p class="mini" style="margin:0 0 10px">Incolla il link di un prodotto → scarico <b>nome e foto</b> in automatico. Poi imposti <b>il tuo prezzo</b> e salvi. (L'origine resta privata: il cliente vede solo il tuo negozio.)</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="imp_url" placeholder="Incolla qui il link del prodotto (…/item/NUMERO.html)" style="flex:1;min-width:220px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:14px">
+        <button class="btn" id="impBtn" style="width:auto;padding:11px 22px" onclick="importFromAli()">Importa ⬇</button>
+      </div>
+      <p id="impMsg" class="mini" style="margin:8px 0 0"></p>
+    </div>
     <div class="panel">
       <h3 style="margin:0 0 12px" id="formTitle">➕ Aggiungi prodotto</h3>
       <input type="hidden" id="p_id">
@@ -68,8 +77,9 @@
         <div class="field"><label>Costo fornitore € <span class="mini">(per il margine)</span></label><input id="p_cost" type="number" step="0.01" placeholder="11.00"></div>
         <div class="field"><label>Disponibilità <span class="mini">(vuoto = illimitata)</span></label><input id="p_stock" type="number" placeholder="∞"></div>
       </div>
-      <div class="field"><label>Link immagine (URL)</label><input id="p_image" placeholder="https://...jpg  (incolla il link della foto del prodotto)"></div>
-      <div class="field"><label>Link fornitore AliExpress <span class="mini">(da dove rifornisci — per il dropshipping)</span></label><input id="p_supplierUrl" placeholder="https://it.aliexpress.com/item/..."></div>
+      <div class="field"><label>Foto prodotto <span class="mini">(una per riga — la prima è quella principale)</span></label><textarea id="p_images" rows="3" placeholder="https://...jpg&#10;https://...jpg" oninput="renderImgPreview()"></textarea></div>
+      <div id="p_imgPreview" style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 11px"></div>
+      <div class="field"><label>Link fornitore <span class="mini">(privato — solo per te, per rifornirti)</span></label><input id="p_supplierUrl" placeholder="https://it.aliexpress.com/item/..."></div>
       <div class="field"><label>Descrizione</label><textarea id="p_description" rows="3" placeholder="Descrizione del prodotto..."></textarea></div>
       <div style="display:flex;gap:8px"><button class="btn" style="flex:1" onclick="saveProduct()">Salva prodotto</button><button class="btn ghost" id="cancelEdit" style="display:none;flex:0 0 auto;padding-left:20px;padding-right:20px" onclick="resetForm()">Annulla</button></div>
       <p id="prodMsg" class="mini" style="margin-top:8px"></p>
