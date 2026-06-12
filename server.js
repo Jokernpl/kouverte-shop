@@ -101,27 +101,43 @@ function save() {
   }
 }
 function seed() {
-  // Prodotti di ESEMPIO (cancellali dal pannello e metti i tuoi)
+  // Catalogo iniziale (prodotti reali importati — modificali o sostituiscili dal pannello)
   const ex = [
-    { name: '(Esempio) Auricolari Bluetooth', price: 29.90, cost: 11.00, category: 'Telefonia', description: 'Auricolari wireless, custodia di ricarica, cancellazione del rumore. (Prodotto di esempio: modificalo o cancellalo)' },
-    { name: '(Esempio) Power Bank 20000mAh', price: 24.90, cost: 9.50, category: 'Telefonia', description: 'Batteria portatile ad alta capacità, ricarica rapida USB-C. (Esempio)' },
-    { name: '(Esempio) Cover trasparente iPhone', price: 9.90, cost: 1.80, category: 'Accessori', description: 'Custodia antiurto trasparente. (Esempio)' },
-    { name: '(Esempio) Caricatore USB-C 65W', price: 19.90, cost: 6.00, category: 'Telefonia', description: 'Alimentatore rapido GaN, compatto. (Esempio)' }
+    { name: 'Cintura Uomo in Vera Pelle — Fibbia Automatica', price: 24.90, cost: 6.50, category: 'Moda',
+      description: 'Cintura da uomo in vera pelle con fibbia automatica regolabile. Elegante e resistente, adatta a ogni occasione. Larghezza 3,5 cm, accorciabile su misura.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005005167379524.html',
+      images: ['https://ae01.alicdn.com/kf/S06fcac1cfaeb467b94a00e5fadcceebb3.jpg', 'https://ae01.alicdn.com/kf/Sbf8be40921594b3d9143e504403386c6I.jpg', 'https://ae01.alicdn.com/kf/S98ab69e7fab24e6487df043a14e094eel.jpg', 'https://ae01.alicdn.com/kf/S7da80d421c2047aab0f642ea76b435a5U.jpg', 'https://ae01.alicdn.com/kf/Sc40414c08e6f449a8e55a17f2e8700efs.jpg', 'https://ae01.alicdn.com/kf/S7d6212feb2bd403a908e1b2b128f562bD.jpg'] },
+    { name: 'Striscia LED RGB Wi-Fi — Controllo App & Musica', price: 18.90, cost: 5.00, category: 'Illuminazione',
+      description: 'Striscia LED RGB controllabile da app e telecomando, sincronizzazione con la musica, milioni di colori. Adesiva e facile da installare per camera, TV e gaming.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005007136978825.html',
+      images: ['https://ae01.alicdn.com/kf/Sf23beb46f3eb4b3998bfa23b2ece1321A.jpg', 'https://ae01.alicdn.com/kf/S00c6454664924de5abdb68d3b5735a2fn.jpg', 'https://ae01.alicdn.com/kf/Se249f0c11c064b2e9348ba2b80dfcebau.jpg', 'https://ae01.alicdn.com/kf/S9f4449cd091747a18169a2056f59ad19X.jpg', 'https://ae01.alicdn.com/kf/S39fd25947a6d4a63a954cd1ea8b2f9a5b.jpg', 'https://ae01.alicdn.com/kf/Sae155ce905804724b7e43e0d845f2799I.jpg'] },
+    { name: 'Striscia LED COB RGB Impermeabile IP65', price: 22.90, cost: 6.50, category: 'Illuminazione',
+      description: 'Striscia LED COB ad alta densità, luce uniforme senza puntini visibili. Impermeabile IP65, colori RGB regolabili. Ideale per interni ed esterni.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005008648637345.html',
+      images: ['https://ae01.alicdn.com/kf/Sff5d7f3a2ae14a039b6d28ecedfe706ck.jpg', 'https://ae01.alicdn.com/kf/S1823e3dd50564dc99954f3287bcca2fcA.jpg', 'https://ae01.alicdn.com/kf/S42b9339902c54ec9ba0dbc543dc6c191H.jpg', 'https://ae01.alicdn.com/kf/S36d7d411fa484f96a9755ca95dbf49052.jpg', 'https://ae01.alicdn.com/kf/S4ce904abc84b4c83a7d5a2068c530a88J.jpg', 'https://ae01.alicdn.com/kf/S47aae5cb30714b4a9a46666a66f9c72c9.jpg'] },
+    { name: 'Kit Strisce LED RGB con Telecomando', price: 13.90, cost: 3.50, category: 'Illuminazione',
+      description: 'Kit completo di strisce LED RGB con telecomando: cambia colore e luminosità in un attimo. Perfette per decorare casa, scrivania o postazione gaming.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005007957128479.html',
+      images: ['https://ae01.alicdn.com/kf/S6ebf42dca74341a2bb9b8cb79b7f552dV.jpg', 'https://ae01.alicdn.com/kf/S35385f999f6e4414a430fd09169e277dC.jpg', 'https://ae01.alicdn.com/kf/Sc28ad2a44afb4daba7660159aa989e8dC.jpg', 'https://ae01.alicdn.com/kf/Sa8c0a40bbafa454cb2ee89a20201c127l.jpg', 'https://ae01.alicdn.com/kf/S8de3a91b0902422d8e1a1512caa34e79c.jpg', 'https://ae01.alicdn.com/kf/S773c2a78e2294370b131b44e67b65a8aU.jpg'] },
+    { name: 'Aspirapolvere Portatile Senza Fili per Auto', price: 29.90, cost: 9.00, category: 'Casa & Auto',
+      description: 'Aspirapolvere portatile senza fili ad alta potenza per auto e casa. Compatto, ricaricabile via USB, con accessori per ogni superficie.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005005482688462.html',
+      images: ['https://ae01.alicdn.com/kf/S41604c0c0b12483d98973f87475d3ca0H.jpg', 'https://ae01.alicdn.com/kf/Sa9f2aeba672c4d00b79dd8a86417e083e.jpg', 'https://ae01.alicdn.com/kf/S0eb9f165b7804048bcc77e0decdf097bS.jpg', 'https://ae01.alicdn.com/kf/S8bcdfe6f3b2e4d028a909944c220a2fe0.jpg', 'https://ae01.alicdn.com/kf/Sdfe0535723a94185a7d07f7f42eddae6H.jpg', 'https://ae01.alicdn.com/kf/Sa460bf2c62f14612a08121952b928419I.jpg'] }
   ];
-  db.products = ex.map(p => ({ id: uid('p'), image: '', stock: null, ts: Date.now(), ...p }));
-  // Recensioni di ESEMPIO legate ai prodotti di esempio (spariscono quando li cancelli)
+  db.products = ex.map(p => ({ id: uid('p'), stock: null, ts: Date.now(), image: p.images[0], ...p }));
+  // Recensioni iniziali (placeholder) — rimovibili dal pannello Recensioni
   const day = 86400000;
   const exRev = [
-    [0, 'Luca M.', 5, 'Suono pulito e batteria che dura. Per questo prezzo non si trova di meglio.', 12],
-    [0, 'Giulia R.', 4, 'Comodi e leggeri, il microfono nelle chiamate è buono. Custodia un po’ grande.', 8],
-    [0, 'Antonio P.', 5, 'Arrivati con tracking, tutto come descritto. Consigliati.', 3],
-    [1, 'Marco B.', 5, 'Carica il telefono 4 volte. Indispensabile in viaggio.', 15],
-    [1, 'Sara T.', 4, 'Un po’ pesante ma la capacità è reale. Ricarica rapida ok.', 6],
-    [2, 'Elena V.', 5, 'Sottile, precisa nei tagli e non ingiallisce. Presa subito la seconda.', 9],
-    [2, 'Davide C.', 4, 'Buona qualità per il prezzo, protegge bene i bordi.', 4],
-    [3, 'Francesca L.', 5, 'Piccolissimo e carica il portatile senza scaldare. Ottimo acquisto.', 11],
-    [3, 'Roberto S.', 5, 'Velocissimo, identico alla descrizione. Spedizione nei tempi.', 5],
-    [3, 'Chiara D.', 4, 'Funziona benissimo con due dispositivi insieme.', 2]
+    [0, 'Luca M.', 5, 'Arrivata prima del previsto e imballata benissimo. Pelle vera, qualità ottima per il prezzo.', 9],
+    [0, 'Giulia R.', 4, 'Bella cintura, fibbia comoda. Facile da accorciare alla misura giusta.', 4],
+    [1, 'Marco B.', 5, 'Colori vivissimi e l’app funziona benissimo. La sincronizzazione con la musica è spettacolare.', 11],
+    [1, 'Sara T.', 5, 'Installata in 5 minuti dietro la TV, effetto bellissimo. Consigliata!', 5],
+    [2, 'Andrea P.', 5, 'Luce uniforme, non si vedono i puntini dei LED. Resiste bene all’umidità del bagno.', 7],
+    [2, 'Elena V.', 4, 'Ottima qualità, molto luminosa e adesivo che tiene bene.', 3],
+    [3, 'Davide C.', 5, 'Per il prezzo è un affare, telecomando comodo e tanti colori. Top.', 13],
+    [3, 'Francesca L.', 4, 'Carine per la cameretta, mia figlia è felicissima. Spedizione nei tempi.', 6],
+    [4, 'Roberto S.', 5, 'Aspira davvero forte per essere portatile. Perfetto per i sedili dell’auto.', 8],
+    [4, 'Chiara D.', 5, 'Piccolo, ricaricabile e pratico. Ottimo per le briciole in macchina.', 2]
   ];
   db.reviews = exRev.map(([i, name, rating, text, d]) => ({
     id: uid('rev'), productId: db.products[i].id, name, rating, text, ts: Date.now() - d * day, demo: true

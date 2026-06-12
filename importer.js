@@ -45,6 +45,8 @@ function normUrl(url) {
 function collectImages(html, ogImage) {
   const raw = html.match(/https?:\/\/ae\d+\.alicdn\.com\/kf\/[A-Za-z0-9_.\/-]+\.(?:jpg|jpeg|png|webp)/gi) || [];
   const byId = new Map();
+  // asset UI ricorrenti su ogni pagina (non sono foto prodotto)
+  const JUNK = new Set(['S6d426a8dcf3b480bb7d1e83ab6666db10']);
   const add = (u) => {
     if (!u) return;
     // l'id immagine è 'S' + run alfanumerico (anche con lettera finale, NON solo hex);
@@ -52,6 +54,7 @@ function collectImages(html, ogImage) {
     const idm = u.match(/\/kf\/(S[A-Za-z0-9]{12,})/);
     if (!idm) return;                                  // scarta loghi/placeholder senza id-immagine
     const id = idm[1];
+    if (JUNK.has(id)) return;
     if (!byId.has(id)) byId.set(id, 'https://ae01.alicdn.com/kf/' + id + '.jpg');
   };
   add(ogImage);
