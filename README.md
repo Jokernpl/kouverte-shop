@@ -2,6 +2,16 @@
 
 Negozio per vendere prodotti (telefonia, accessori, ecc.): **aggiungi un prodotto col tuo prezzo → il cliente paga → tu ordini dal fornitore e spedisci.** Pagamenti con carta tramite **Stripe** (sicuro, i soldi arrivano sul tuo conto).
 
+## 🚀 Pubblica online (1 click)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Jokernpl/kouverte-shop)
+
+1. Clicca il pulsante qui sopra (oppure render.com → **New +** → **Blueprint** → scegli `Jokernpl/kouverte-shop`).
+2. Accedi a Render (registrazione gratis): **questo passo lo fai tu**, è il tuo account.
+3. Render legge `render.yaml` da solo. Le variabili sono **tutte opzionali**: lascia vuoto → **Apply/Deploy**.
+4. In ~2 minuti sei online su `https://kouverte-shop.onrender.com`, già pieno di prodotti.
+
+Extra (più avanti, da Settings → Environment): `STRIPE_SECRET_KEY` per incassare con carta · `UPSTASH_REDIS_REST_URL`+`UPSTASH_REDIS_REST_TOKEN` per salvare ordini/prodotti per sempre · `ADMIN_PASSWORD` (vuoto = `admin123`).
+
 ## ▶️ Avvio sul tuo PC
 1. Apri il terminale nella cartella `kouverte shop`
 2. Prima volta: `npm install`

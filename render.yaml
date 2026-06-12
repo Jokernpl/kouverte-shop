@@ -7,9 +7,14 @@ services:
     startCommand: npm start
     autoDeploy: true
     envVars:
-      - key: ADMIN_PASSWORD
+      # Tutte OPZIONALI: lascia vuoto e il sito parte lo stesso.
+      - key: ADMIN_PASSWORD          # vuoto = admin123 (cambiala dopo!)
         sync: false
-      - key: SHOP_NAME
+      - key: SHOP_NAME               # vuoto = Kouverte Elettronica
         sync: false
-      - key: STRIPE_SECRET_KEY
+      - key: STRIPE_SECRET_KEY       # per incassare con carta (sk_live_... / sk_test_...)
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL  # persistenza: ordini/prodotti sopravvivono ai redeploy
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
         sync: false
