@@ -122,7 +122,11 @@ function seed() {
     { name: 'Aspirapolvere Portatile Senza Fili per Auto', price: 29.90, cost: 9.00, category: 'Casa & Auto',
       description: 'Aspirapolvere portatile senza fili ad alta potenza per auto e casa. Compatto, ricaricabile via USB, con accessori per ogni superficie.',
       supplierUrl: 'https://it.aliexpress.com/item/1005005482688462.html',
-      images: ['https://ae01.alicdn.com/kf/S41604c0c0b12483d98973f87475d3ca0H.jpg', 'https://ae01.alicdn.com/kf/Sa9f2aeba672c4d00b79dd8a86417e083e.jpg', 'https://ae01.alicdn.com/kf/S0eb9f165b7804048bcc77e0decdf097bS.jpg', 'https://ae01.alicdn.com/kf/S8bcdfe6f3b2e4d028a909944c220a2fe0.jpg', 'https://ae01.alicdn.com/kf/Sdfe0535723a94185a7d07f7f42eddae6H.jpg', 'https://ae01.alicdn.com/kf/Sa460bf2c62f14612a08121952b928419I.jpg'] }
+      images: ['https://ae01.alicdn.com/kf/S41604c0c0b12483d98973f87475d3ca0H.jpg', 'https://ae01.alicdn.com/kf/Sa9f2aeba672c4d00b79dd8a86417e083e.jpg', 'https://ae01.alicdn.com/kf/S0eb9f165b7804048bcc77e0decdf097bS.jpg', 'https://ae01.alicdn.com/kf/S8bcdfe6f3b2e4d028a909944c220a2fe0.jpg', 'https://ae01.alicdn.com/kf/Sdfe0535723a94185a7d07f7f42eddae6H.jpg', 'https://ae01.alicdn.com/kf/Sa460bf2c62f14612a08121952b928419I.jpg'] },
+    { name: 'Mini Ventilatore Portatile Tascabile USB Ricaricabile', price: 22.90, cost: 12.90, category: 'Casa & Auto',
+      description: 'Mini ventilatore portatile tascabile, ricaricabile via USB. Silenzioso ma potente, con batteria a lunga durata: perfetto in borsa, sulla scrivania o in viaggio.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005012246370220.html',
+      images: ['https://ae01.alicdn.com/kf/Sb95f14d9616f4abf8d7bd807725ebc60d.jpg', 'https://ae01.alicdn.com/kf/Sac6e92cc5a974cd694b6e282862ad95a9.jpg', 'https://ae01.alicdn.com/kf/Sef8660e7c950498ea05cb389fa9b328aC.jpg', 'https://ae01.alicdn.com/kf/S83b73269815140f1a3c8363b377144efX.jpg', 'https://ae01.alicdn.com/kf/Se546b6078e2344d7a279a024dc349facq.jpg', 'https://ae01.alicdn.com/kf/S1e94b50819594a2da87e4c5e48b0266aO.jpg'] }
   ];
   db.products = ex.map(p => ({ id: uid('p'), stock: null, ts: Date.now(), image: p.images[0], ...p }));
   // Recensioni iniziali (placeholder) — rimovibili dal pannello Recensioni
@@ -137,7 +141,9 @@ function seed() {
     [3, 'Davide C.', 5, 'Per il prezzo è un affare, telecomando comodo e tanti colori. Top.', 13],
     [3, 'Francesca L.', 4, 'Carine per la cameretta, mia figlia è felicissima. Spedizione nei tempi.', 6],
     [4, 'Roberto S.', 5, 'Aspira davvero forte per essere portatile. Perfetto per i sedili dell’auto.', 8],
-    [4, 'Chiara D.', 5, 'Piccolo, ricaricabile e pratico. Ottimo per le briciole in macchina.', 2]
+    [4, 'Chiara D.', 5, 'Piccolo, ricaricabile e pratico. Ottimo per le briciole in macchina.', 2],
+    [5, 'Valentina G.', 5, 'Piccolo ma potente, lo porto sempre in borsa. Si ricarica in fretta.', 6],
+    [5, 'Stefano R.', 4, 'Comodo e silenzioso, la batteria dura parecchio. Ottimo per l’estate.', 2]
   ];
   db.reviews = exRev.map(([i, name, rating, text, d]) => ({
     id: uid('rev'), productId: db.products[i].id, name, rating, text, ts: Date.now() - d * day, demo: true
