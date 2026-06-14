@@ -58,12 +58,13 @@ function renderGrid(list) {
     const sold = p.stock === 0;
     const img = pimg(p);
     const hot = (p.rating && p.rating.count >= 3) || i < 2;
+    const low = (p.stock != null && p.stock > 0 && p.stock <= 10);
     const card = document.createElement('div');
     card.className = 'card';
     card.style.animationDelay = (i * 55) + 'ms';
     card.innerHTML = `
       <div class="thumb">
-        ${hot ? '<span class="card-badge">🔥 Top</span>' : ''}
+        ${low ? `<span class="card-badge">🔥 Solo ${p.stock} rimasti</span>` : (hot ? '<span class="card-badge">🔥 Top</span>' : '')}
         <span class="card-ship">🚚 Spedizione gratis</span>
         ${img ? `<img src="${esc(img)}" loading="lazy" onerror="this.remove()">` : '📦'}
       </div>

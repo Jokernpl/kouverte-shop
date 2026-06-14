@@ -138,7 +138,11 @@ function seed() {
     { name: 'Notebook Windows 11 Pro 14” — Intel, 12GB RAM, SSD', price: 249.00, cost: 193.00, category: 'Tecnologia',
       description: 'Computer portatile con Windows 11 Pro, schermo da 14,1 pollici, 12GB di RAM e SSD. Leggero e pronto all’uso per studio, ufficio e navigazione.',
       supplierUrl: 'https://it.aliexpress.com/item/1005012169042797.html',
-      images: ['https://ae01.alicdn.com/kf/A2fe8c93ff10445d3b02632bebe77e4b80.jpg', 'https://ae01.alicdn.com/kf/Aeb90410838a0470aaebac533fafed642b.jpg', 'https://ae01.alicdn.com/kf/Acb13d1400d0f4345be68e0ed2940fc41t.jpg', 'https://ae01.alicdn.com/kf/A994f6f47707c466aa3063af8ef7004caw.jpg', 'https://ae01.alicdn.com/kf/A629405c4fbb2448eb0a217da966250a89.jpg', 'https://ae01.alicdn.com/kf/Af698030c8b254d06aa81046a458c18f7L.jpg'] }
+      images: ['https://ae01.alicdn.com/kf/A2fe8c93ff10445d3b02632bebe77e4b80.jpg', 'https://ae01.alicdn.com/kf/Aeb90410838a0470aaebac533fafed642b.jpg', 'https://ae01.alicdn.com/kf/Acb13d1400d0f4345be68e0ed2940fc41t.jpg', 'https://ae01.alicdn.com/kf/A994f6f47707c466aa3063af8ef7004caw.jpg', 'https://ae01.alicdn.com/kf/A629405c4fbb2448eb0a217da966250a89.jpg', 'https://ae01.alicdn.com/kf/Af698030c8b254d06aa81046a458c18f7L.jpg'] },
+    { name: 'Smartwatch Uomo 49mm — Chiamate, Sport e Notifiche', price: 25.00, cost: 6.72, stock: 10, category: 'Tecnologia',
+      description: 'Smartwatch da 49mm con ampio schermo, chiamate Bluetooth, monitoraggio sportivo (passi, battito, sonno) e notifiche dal telefono. Compatibile Android e iPhone.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005009483305953.html',
+      images: ['https://ae01.alicdn.com/kf/Sdd5f7624b858495d93681fd227d06b67x.jpg', 'https://ae01.alicdn.com/kf/S2616eb14d6724ff0864a7fe285ece88bq.jpg', 'https://ae01.alicdn.com/kf/Se440f880b8f34598bbc79a4c3a66ec93s.jpg', 'https://ae01.alicdn.com/kf/S6c510878cdb44af89e2313aa9b588752T.jpg', 'https://ae01.alicdn.com/kf/S0740b9434b3e453881272347c3aeac75h.jpg', 'https://ae01.alicdn.com/kf/Sa201e95adfb247eea9e64dde82dbaca8Q.jpg'] }
   ];
   db.products = ex.map(p => ({ id: uid('p'), stock: null, ts: Date.now(), image: p.images[0], ...p }));
   // Recensioni iniziali (placeholder) — rimovibili dal pannello Recensioni
@@ -161,7 +165,9 @@ function seed() {
     [7, 'Gabriele M.', 5, 'Si collegano subito al telefono, la traduzione è comoda in viaggio. Sorprendenti.', 5],
     [7, 'Alessia P.', 4, 'Belli e leggeri, audio buono. Per chiamate e foto vanno benissimo.', 2],
     [8, 'Fabio T.', 5, 'Leggero e veloce per studio e ufficio, Windows già installato. Ottimo prezzo.', 6],
-    [8, 'Nadia C.', 4, 'Fa il suo lavoro per navigare e documenti. Schermo buono, batteria discreta.', 2]
+    [8, 'Nadia C.', 4, 'Fa il suo lavoro per navigare e documenti. Schermo buono, batteria discreta.', 2],
+    [9, 'Christian R.', 5, 'Bello e grande, le chiamate dal polso funzionano davvero. Per il prezzo è ottimo.', 4],
+    [9, 'Deborah L.', 4, 'Carino, conta passi e battito. App facile, batteria che dura un paio di giorni.', 1]
   ];
   db.reviews = exRev.map(([i, name, rating, text, d]) => ({
     id: uid('rev'), productId: db.products[i].id, name, rating, text, ts: Date.now() - d * day, demo: true
