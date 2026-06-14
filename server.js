@@ -142,7 +142,11 @@ function seed() {
     { name: 'Smartwatch Uomo 49mm — Chiamate, Sport e Notifiche', price: 25.00, cost: 6.72, stock: 10, category: 'Tecnologia',
       description: 'Smartwatch da 49mm con ampio schermo, chiamate Bluetooth, monitoraggio sportivo (passi, battito, sonno) e notifiche dal telefono. Compatibile Android e iPhone.',
       supplierUrl: 'https://it.aliexpress.com/item/1005009483305953.html',
-      images: ['https://ae01.alicdn.com/kf/Sdd5f7624b858495d93681fd227d06b67x.jpg', 'https://ae01.alicdn.com/kf/S2616eb14d6724ff0864a7fe285ece88bq.jpg', 'https://ae01.alicdn.com/kf/Se440f880b8f34598bbc79a4c3a66ec93s.jpg', 'https://ae01.alicdn.com/kf/S6c510878cdb44af89e2313aa9b588752T.jpg', 'https://ae01.alicdn.com/kf/S0740b9434b3e453881272347c3aeac75h.jpg', 'https://ae01.alicdn.com/kf/Sa201e95adfb247eea9e64dde82dbaca8Q.jpg'] }
+      images: ['https://ae01.alicdn.com/kf/Sdd5f7624b858495d93681fd227d06b67x.jpg', 'https://ae01.alicdn.com/kf/S2616eb14d6724ff0864a7fe285ece88bq.jpg', 'https://ae01.alicdn.com/kf/Se440f880b8f34598bbc79a4c3a66ec93s.jpg', 'https://ae01.alicdn.com/kf/S6c510878cdb44af89e2313aa9b588752T.jpg', 'https://ae01.alicdn.com/kf/S0740b9434b3e453881272347c3aeac75h.jpg', 'https://ae01.alicdn.com/kf/Sa201e95adfb247eea9e64dde82dbaca8Q.jpg'] },
+    { name: 'Smartphone Android 5G 7,3” HD — Dual SIM', price: 249.00, cost: 115.00, category: 'Tecnologia',
+      description: 'Smartphone Android 5G con ampio display 7,3” HD, doppia SIM, fotocamera multipla e batteria capiente. Sbloccato, pronto all’uso con qualsiasi operatore.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005012302691960.html',
+      images: ['https://ae01.alicdn.com/kf/Sf3ec6fb944eb4b5598f3351d95cfa02c5.jpg', 'https://ae01.alicdn.com/kf/S18ebe981749246aaa01ba61a782865725.jpg', 'https://ae01.alicdn.com/kf/Scb4c77cae81a4eeab791de425327eb2d8.jpg', 'https://ae01.alicdn.com/kf/S23d3b494ea6c49609758bf835060a06ee.jpg', 'https://ae01.alicdn.com/kf/S6b1c96da08bd46a2ac3372b8405d630fe.jpg', 'https://ae01.alicdn.com/kf/Sbc0cc14c52004e2c9ee04318f85b12dbK.jpg'] }
   ];
   db.products = ex.map(p => ({ id: uid('p'), stock: null, ts: Date.now(), image: p.images[0], ...p }));
   // Recensioni iniziali (placeholder) — rimovibili dal pannello Recensioni
@@ -167,7 +171,9 @@ function seed() {
     [8, 'Fabio T.', 5, 'Leggero e veloce per studio e ufficio, Windows già installato. Ottimo prezzo.', 6],
     [8, 'Nadia C.', 4, 'Fa il suo lavoro per navigare e documenti. Schermo buono, batteria discreta.', 2],
     [9, 'Christian R.', 5, 'Bello e grande, le chiamate dal polso funzionano davvero. Per il prezzo è ottimo.', 4],
-    [9, 'Deborah L.', 4, 'Carino, conta passi e battito. App facile, batteria che dura un paio di giorni.', 1]
+    [9, 'Deborah L.', 4, 'Carino, conta passi e battito. App facile, batteria che dura un paio di giorni.', 1],
+    [10, 'Riccardo F.', 5, 'Schermo grande e bello, veloce per il prezzo. Arrivato in una settimana.', 5],
+    [10, 'Valeria M.', 4, 'Buon telefono per la fascia, la doppia SIM è comoda. Fa il suo lavoro.', 2]
   ];
   db.reviews = exRev.map(([i, name, rating, text, d]) => ({
     id: uid('rev'), productId: db.products[i].id, name, rating, text, ts: Date.now() - d * day, demo: true
