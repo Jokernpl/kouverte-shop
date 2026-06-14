@@ -131,7 +131,7 @@ function seed() {
     { name: 'Occhiali Smart AI 8K HD con Traduzione e Chiamate Mani Libere', price: 29.00, cost: 11.00, category: 'Tecnologia',
       description: 'Occhiali smart con fotocamera 8K HD, traduzione AI in tempo reale, chiamate a mani libere e audio integrato. Si collegano al telefono via Bluetooth.',
       supplierUrl: 'https://it.aliexpress.com/item/1005012282472335.html',
-      images: ['https://ae01.alicdn.com/kf/Sb52c476a816e4c248034d4e7cb5d72a7o.jpg', 'https://ae01.alicdn.com/kf/S3992672644674ba0bed669a8ec6b4029I.jpg', 'https://ae01.alicdn.com/kf/S5541bd7b69e24e1a8dbe86ae376f8f81u.jpg', 'https://ae01.alicdn.com/kf/S3989b7a5f11241c3a7df9782101fb54b7.jpg', 'https://ae01.alicdn.com/kf/S5904e23297a44615afd88f27b5a2fbfcx.jpg', 'https://ae01.alicdn.com/kf/S589a7efc56634549a6e4ea74d09de100N.jpg'] },
+      images: ['https://ae01.alicdn.com/kf/S3992672644674ba0bed669a8ec6b4029I.jpg', 'https://ae01.alicdn.com/kf/S5541bd7b69e24e1a8dbe86ae376f8f81u.jpg', 'https://ae01.alicdn.com/kf/S3989b7a5f11241c3a7df9782101fb54b7.jpg', 'https://ae01.alicdn.com/kf/S5904e23297a44615afd88f27b5a2fbfcx.jpg', 'https://ae01.alicdn.com/kf/S589a7efc56634549a6e4ea74d09de100N.jpg'] },
     { name: 'Notebook Windows 11 Pro 14” — Intel, 12GB RAM, SSD', price: 249.00, cost: 193.00, category: 'Tecnologia',
       description: 'Computer portatile con Windows 11 Pro, schermo da 14,1 pollici, 12GB di RAM e SSD. Leggero e pronto all’uso per studio, ufficio e navigazione.',
       supplierUrl: 'https://it.aliexpress.com/item/1005012169042797.html',
