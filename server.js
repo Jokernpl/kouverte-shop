@@ -68,25 +68,22 @@ async function redisGet() {
 }
 
 async function load() {
-  // 1) Redis è la fonte di verità: dopo un redeploy il file è vuoto ma Redis no.
-  if (redisEnabled) {
-    const fromRedis = await redisGet();
-    if (fromRedis && (Array.isArray(fromRedis.products) || Array.isArray(fromRedis.orders))) {
-      db = { products: fromRedis.products || [], orders: fromRedis.orders || [], reviews: fromRedis.reviews || [] };
-      try { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); } catch (e) {}
-      console.log('[DB] ✅ Ripristinato da Redis: ' + db.products.length + ' prodotti · ' + db.orders.length + ' ordini');
-      return;
-    }
-    console.log('[DB] Redis attivo ma vuoto → carico da file/seed e lo salvo su Redis');
+  // I PRODOTTI e le recensioni demo arrivano SEMPRE dal codice (seed): così ogni
+  // aggiornamento del catalogo è subito attivo a ogni deploy, e Redis non può più
+  // "congelare" un catalogo vecchio. Da Redis/file ripristiniamo SOLO gli ordini
+  // reali dei clienti (+ eventuali recensioni vere lasciate dai clienti).
+  seed();
+  const seedReviews = db.reviews;
+  let saved = null;
+  if (redisEnabled) { try { saved = await redisGet(); } catch (e) {} }
+  if (!saved) { try { saved = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch (e) {} }
+  if (saved) {
+    if (Array.isArray(saved.orders)) db.orders = saved.orders;
+    const realReviews = Array.isArray(saved.reviews) ? saved.reviews.filter(r => r && !r.demo) : [];
+    db.reviews = seedReviews.concat(realReviews);
   }
-  // 2) File locale (o seed iniziale alla prima accensione)
-  try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
-  catch (e) { db = { products: [], orders: [], reviews: [] }; seed(); }
-  if (!db.products) db.products = [];
-  if (!db.orders) db.orders = [];
-  if (!db.reviews) db.reviews = [];
-  // Se Redis è attivo ma era vuoto, salva subito lo stato così diventa durevole.
-  if (redisEnabled) redisSet(db).then(ok => console.log(ok ? '[DB] ✅ Stato iniziale salvato su Redis' : '[DB] ⚠️ Salvataggio iniziale su Redis fallito'));
+  save(); // riallinea file + Redis: catalogo dal codice + ordini ripristinati
+  console.log('[DB] Catalogo dal codice: ' + db.products.length + ' prodotti · ordini: ' + db.orders.length + (redisEnabled ? ' · Redis ON' : ' · solo file'));
 }
 
 let fileT = null, redisT = null;
@@ -148,7 +145,7 @@ function seed() {
       supplierUrl: 'https://it.aliexpress.com/item/1005012302691960.html',
       images: ['https://ae01.alicdn.com/kf/Sf3ec6fb944eb4b5598f3351d95cfa02c5.jpg', 'https://ae01.alicdn.com/kf/S18ebe981749246aaa01ba61a782865725.jpg', 'https://ae01.alicdn.com/kf/Scb4c77cae81a4eeab791de425327eb2d8.jpg', 'https://ae01.alicdn.com/kf/S23d3b494ea6c49609758bf835060a06ee.jpg', 'https://ae01.alicdn.com/kf/S6b1c96da08bd46a2ac3372b8405d630fe.jpg', 'https://ae01.alicdn.com/kf/Sbc0cc14c52004e2c9ee04318f85b12dbK.jpg'] }
   ];
-  db.products = ex.map(p => ({ id: uid('p'), stock: null, ts: Date.now(), image: p.images[0], ...p }));
+  db.products = ex.map((p, i) => ({ id: 'p_seed_' + (i + 1), stock: null, ts: 1718200000000 + i, image: p.images[0], ...p }));
   // Recensioni iniziali (placeholder) — rimovibili dal pannello Recensioni
   const day = 86400000;
   const exRev = [
