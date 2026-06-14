@@ -126,7 +126,11 @@ function seed() {
     { name: 'Mini Ventilatore Portatile Tascabile USB Ricaricabile', price: 22.90, cost: 12.90, category: 'Casa & Auto',
       description: 'Mini ventilatore portatile tascabile, ricaricabile via USB. Silenzioso ma potente, con batteria a lunga durata: perfetto in borsa, sulla scrivania o in viaggio.',
       supplierUrl: 'https://it.aliexpress.com/item/1005012246370220.html',
-      images: ['https://ae01.alicdn.com/kf/Sb95f14d9616f4abf8d7bd807725ebc60d.jpg', 'https://ae01.alicdn.com/kf/Sac6e92cc5a974cd694b6e282862ad95a9.jpg', 'https://ae01.alicdn.com/kf/Sef8660e7c950498ea05cb389fa9b328aC.jpg', 'https://ae01.alicdn.com/kf/S83b73269815140f1a3c8363b377144efX.jpg', 'https://ae01.alicdn.com/kf/Se546b6078e2344d7a279a024dc349facq.jpg', 'https://ae01.alicdn.com/kf/S1e94b50819594a2da87e4c5e48b0266aO.jpg'] }
+      images: ['https://ae01.alicdn.com/kf/Sb95f14d9616f4abf8d7bd807725ebc60d.jpg', 'https://ae01.alicdn.com/kf/Sac6e92cc5a974cd694b6e282862ad95a9.jpg', 'https://ae01.alicdn.com/kf/Sef8660e7c950498ea05cb389fa9b328aC.jpg', 'https://ae01.alicdn.com/kf/S83b73269815140f1a3c8363b377144efX.jpg', 'https://ae01.alicdn.com/kf/Se546b6078e2344d7a279a024dc349facq.jpg', 'https://ae01.alicdn.com/kf/S1e94b50819594a2da87e4c5e48b0266aO.jpg'] },
+    { name: 'Pistola ad Acqua Elettrica con Rinculo — Giocattolo', price: 20.00, cost: 10.00, category: 'Giocattoli',
+      description: 'Pistola ad acqua elettrica automatica con simulazione di sparo e rinculo. Lunga gittata, ricaricabile via USB: divertimento assicurato in piscina e in giardino.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005011829896333.html',
+      images: ['https://ae01.alicdn.com/kf/Sa2effce140a64aecb5b943d5122b4778L.jpg', 'https://ae01.alicdn.com/kf/S9d844fcd45aa401ba41c1b1db32b3874N.jpg', 'https://ae01.alicdn.com/kf/S3a24527bd9ba4f69bd3facd438bb2aae4.jpg', 'https://ae01.alicdn.com/kf/Sc6df1d4776154b1d9d347feffb30c2deL.jpg', 'https://ae01.alicdn.com/kf/Sbefbb09f924041029164d0248f2c2d3ac.jpg', 'https://ae01.alicdn.com/kf/S98e3ce5e4fe3475989e86fd1cb308e4br.jpg'] }
   ];
   db.products = ex.map(p => ({ id: uid('p'), stock: null, ts: Date.now(), image: p.images[0], ...p }));
   // Recensioni iniziali (placeholder) — rimovibili dal pannello Recensioni
@@ -143,7 +147,9 @@ function seed() {
     [4, 'Roberto S.', 5, 'Aspira davvero forte per essere portatile. Perfetto per i sedili dell’auto.', 8],
     [4, 'Chiara D.', 5, 'Piccolo, ricaricabile e pratico. Ottimo per le briciole in macchina.', 2],
     [5, 'Valentina G.', 5, 'Piccolo ma potente, lo porto sempre in borsa. Si ricarica in fretta.', 6],
-    [5, 'Stefano R.', 4, 'Comodo e silenzioso, la batteria dura parecchio. Ottimo per l’estate.', 2]
+    [5, 'Stefano R.', 4, 'Comodo e silenzioso, la batteria dura parecchio. Ottimo per l’estate.', 2],
+    [6, 'Simone D.', 5, 'Spara forte e lontano, ai bambini è piaciuta tantissimo. Si ricarica in fretta.', 4],
+    [6, 'Martina R.', 5, 'Divertentissima in piscina, ben fatta e robusta. Consigliata!', 1]
   ];
   db.reviews = exRev.map(([i, name, rating, text, d]) => ({
     id: uid('rev'), productId: db.products[i].id, name, rating, text, ts: Date.now() - d * day, demo: true
