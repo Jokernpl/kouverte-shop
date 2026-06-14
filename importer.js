@@ -51,7 +51,7 @@ function collectImages(html, ogImage) {
     if (!u) return;
     // l'id immagine è 'S' + run alfanumerico (anche con lettera finale, NON solo hex);
     // si ferma al primo '/', '.' o suffisso taglia (_80x80) → URL canonico a piena risoluzione
-    const idm = u.match(/\/kf\/(S[A-Za-z0-9]{12,})/);
+    const idm = u.match(/\/kf\/([A-Za-z][A-Za-z0-9]{12,})/);
     if (!idm) return;                                  // scarta loghi/placeholder senza id-immagine
     const id = idm[1];
     if (JUNK.has(id)) return;
