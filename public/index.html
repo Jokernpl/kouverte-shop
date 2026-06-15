@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Kouverte Elettronica</title>
 <meta name="description" content="Kouverte — tutto quello che cerchi, ai prezzi che sorprendono. Spedizione tracciata, pagamenti sicuri, reso facile.">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -57,7 +57,7 @@
 <!-- Product modal -->
 <div class="scrim pmodal" id="pmodal">
   <div class="drawer" onclick="event.stopPropagation()">
-    <div class="pm-img" id="pmImg">📦</div>
+    <div class="pm-img" id="pmImg" title="Tocca per ingrandire">📦</div>
     <div class="pm-gallery" id="pmGallery"></div>
     <div class="pm-body">
       <div class="card-cat" style="color:var(--brand);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.6px" id="pmCat"></div>
@@ -169,8 +169,14 @@
   <div class="bf-bottom">© 2026 Kouverte — Tutti i diritti riservati</div>
 </footer>
 
+<!-- Foto a schermo intero -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lb-close" aria-label="Chiudi">✕</span>
+  <img id="lbImg" alt="Foto prodotto ingrandita">
+</div>
+
 <div class="toast" id="toast"></div>
 <script src="/socket.io/socket.io.js"></script>
-<script src="shop.js?v=2"></script>
+<script src="shop.js?v=3"></script>
 </body>
 </html>

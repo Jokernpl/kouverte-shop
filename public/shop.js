@@ -88,7 +88,9 @@ function starsHtml(avg) { const f = Math.round(avg || 0); return '<span class="s
 const num1 = n => (Math.round((n || 0) * 10) / 10).toFixed(1).replace('.', ',');
 
 // ---- product modal ----
+let curMainImg = '';
 function setMainImg(url) {
+  curMainImg = url || '';
   $('#pmImg').innerHTML = url ? `<img src="${esc(url)}" onerror="this.parentElement.textContent='📦'">` : '📦';
 }
 function openProduct(id) {
@@ -116,6 +118,12 @@ function openProduct(id) {
 }
 function closeProduct() { $('#pmodal').classList.remove('on'); }
 $('#pmodal').onclick = closeProduct;
+
+// ---- foto a schermo intero (zoom) ----
+function openLightbox(url) { if (!url) return; $('#lbImg').src = url; $('#lightbox').classList.add('on'); }
+function closeLightbox() { $('#lightbox').classList.remove('on'); }
+$('#pmImg').onclick = () => openLightbox(curMainImg);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLightbox(); closeProduct(); } });
 
 // ---- recensioni ----
 let rvStars = 0, rvPid = null;
@@ -239,7 +247,7 @@ $('#q').addEventListener('input', e => {
   st = setTimeout(async () => {
     const q = e.target.value.trim();
     const r = await fetch('/api/products?q=' + encodeURIComponent(q) + (curCat ? '&cat=' + encodeURIComponent(curCat) : ''));
-    const d = await r.json(); renderGrid(d.products || []);
+    const d = await r.json(); PRODUCTS = d.products || []; renderGrid(PRODUCTS);
   }, 220);
 });
 
