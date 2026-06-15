@@ -166,6 +166,12 @@ img{display:block;max-width:100%}
 .lightbox.on{display:flex}
 .lightbox img{max-width:96vw;max-height:92vh;object-fit:contain;border-radius:12px;box-shadow:0 12px 50px rgba(0,0,0,.55)}
 .lb-close{position:absolute;top:12px;right:20px;color:#fff;font-size:34px;line-height:1;opacity:.85;cursor:pointer}
+.pm-sizes{margin:14px 0 2px}
+.sz-label{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.sz-row{display:flex;gap:8px;flex-wrap:wrap}
+.sz{min-width:46px;padding:9px 13px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer;transition:.15s}
+.sz:hover{border-color:var(--brand)}
+.sz.on{background:var(--grad);color:#fff;border-color:transparent}
 
 /* ===== Stelle e recensioni ===== */
 .stars{color:#f59e0b;letter-spacing:1px;font-size:14px}

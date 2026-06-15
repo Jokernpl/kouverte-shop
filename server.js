@@ -143,7 +143,15 @@ function seed() {
     { name: 'Smartphone Android 5G 7,3” HD — Dual SIM', price: 249.00, cost: 115.00, category: 'Tecnologia',
       description: 'Smartphone Android 5G con ampio display 7,3” HD, doppia SIM, fotocamera multipla e batteria capiente. Sbloccato, pronto all’uso con qualsiasi operatore.',
       supplierUrl: 'https://it.aliexpress.com/item/1005012302691960.html',
-      images: ['https://ae01.alicdn.com/kf/Sf3ec6fb944eb4b5598f3351d95cfa02c5.jpg', 'https://ae01.alicdn.com/kf/S18ebe981749246aaa01ba61a782865725.jpg', 'https://ae01.alicdn.com/kf/Scb4c77cae81a4eeab791de425327eb2d8.jpg', 'https://ae01.alicdn.com/kf/S23d3b494ea6c49609758bf835060a06ee.jpg', 'https://ae01.alicdn.com/kf/S6b1c96da08bd46a2ac3372b8405d630fe.jpg', 'https://ae01.alicdn.com/kf/Sbc0cc14c52004e2c9ee04318f85b12dbK.jpg'] }
+      images: ['https://ae01.alicdn.com/kf/Sf3ec6fb944eb4b5598f3351d95cfa02c5.jpg', 'https://ae01.alicdn.com/kf/S18ebe981749246aaa01ba61a782865725.jpg', 'https://ae01.alicdn.com/kf/Scb4c77cae81a4eeab791de425327eb2d8.jpg', 'https://ae01.alicdn.com/kf/S23d3b494ea6c49609758bf835060a06ee.jpg', 'https://ae01.alicdn.com/kf/S6b1c96da08bd46a2ac3372b8405d630fe.jpg', 'https://ae01.alicdn.com/kf/Sbc0cc14c52004e2c9ee04318f85b12dbK.jpg'] },
+    { name: 'Smart TV Xiaomi 32” HD — Wi-Fi', price: 250.00, cost: 116.00, category: 'Tecnologia',
+      description: 'Smart TV Xiaomi da 32 pollici HD con Wi-Fi, app di streaming integrate e telecomando. Compatta e dal suono dinamico, perfetta per camera e soggiorno.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005010063076436.html',
+      images: ['https://ae01.alicdn.com/kf/S89c4e79bb71c46c09ac6b680077c6908F.jpg', 'https://ae01.alicdn.com/kf/Sb5b57a878d5b48e7a3bcb3b1a1f06de9C.jpg', 'https://ae01.alicdn.com/kf/Sa86d9777a0e14b418003173d1909ce1dR.jpg', 'https://ae01.alicdn.com/kf/S5a73bd1065ed4b5f947e12d96b27f332r.jpg', 'https://ae01.alicdn.com/kf/S09ba93e5886045ee9072dc39b41330cb7.jpg', 'https://ae01.alicdn.com/kf/S5be46d9de945406c823fed6ab311cffdN.jpg'] },
+    { name: 'Polo Uomo Waffle Tinta Unita — Estate', price: 29.90, cost: 10.00, category: 'Moda', sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+      description: 'Polo da uomo in tessuto waffle traspirante, con taschino. Vestibilità regolare, perfetta per l’estate. Scegli la tua taglia tra S e XXL.',
+      supplierUrl: 'https://it.aliexpress.com/item/1005008744711411.html',
+      images: ['https://ae01.alicdn.com/kf/Sa138b4f26bb84319a993fc2146413ddfn.jpg', 'https://ae01.alicdn.com/kf/S45c1574f46ff4c4c983325d4987e74bfH.jpg', 'https://ae01.alicdn.com/kf/S84b7c7536dad49b79db1aaf165679befh.jpg', 'https://ae01.alicdn.com/kf/S6bd82078f2c342d48b9645844a06ad92g.jpg', 'https://ae01.alicdn.com/kf/Scaa0dab48c3d4354b91d7d86edea08fef.jpg', 'https://ae01.alicdn.com/kf/S6755be53c3ff44f7811deb99f3f3f0b4a.jpg'] }
   ];
   db.products = ex.map((p, i) => ({ id: 'p_seed_' + (i + 1), stock: null, ts: 1718200000000 + i, image: p.images[0], ...p }));
   // Recensioni iniziali (placeholder) — rimovibili dal pannello Recensioni
@@ -170,7 +178,11 @@ function seed() {
     [9, 'Christian R.', 5, 'Bello e grande, le chiamate dal polso funzionano davvero. Per il prezzo è ottimo.', 4],
     [9, 'Deborah L.', 4, 'Carino, conta passi e battito. App facile, batteria che dura un paio di giorni.', 1],
     [10, 'Riccardo F.', 5, 'Schermo grande e bello, veloce per il prezzo. Arrivato in una settimana.', 5],
-    [10, 'Valeria M.', 4, 'Buon telefono per la fascia, la doppia SIM è comoda. Fa il suo lavoro.', 2]
+    [10, 'Valeria M.', 4, 'Buon telefono per la fascia, la doppia SIM è comoda. Fa il suo lavoro.', 2],
+    [11, 'Giorgio M.', 5, 'TV piccola ma ottima, immagine nitida e app già pronte. Perfetta per la camera.', 5],
+    [11, 'Lucia B.', 4, 'Buona per il prezzo, suono discreto e facile da configurare.', 2],
+    [12, 'Matteo R.', 5, 'Polo comoda e fresca, bel tessuto. Taglia giusta, la riprenderò in altri colori.', 4],
+    [12, 'Sara N.', 4, 'Bella qualità per il prezzo, vestibilità regolare. Arrivata in una settimana.', 2]
   ];
   db.reviews = exRev.map(([i, name, rating, text, d]) => ({
     id: uid('rev'), productId: db.products[i].id, name, rating, text, ts: Date.now() - d * day, demo: true
@@ -284,7 +296,7 @@ app.post('/api/checkout', async (req, res) => {
       const p = db.products.find(x => x.id === ci.id);
       if (!p) continue;
       const qty = Math.max(1, Math.min(99, parseInt(ci.qty) || 1));
-      items.push({ id: p.id, name: p.name, price: p.price, cost: p.cost || 0, qty, supplierUrl: p.supplierUrl || '' });
+      items.push({ id: p.id, name: p.name, price: p.price, cost: p.cost || 0, qty, supplierUrl: p.supplierUrl || '', size: (ci.size || '').toString().slice(0, 24) });
     }
     if (!items.length) return res.status(400).json({ error: 'Prodotti non più disponibili' });
     const total = Math.round(items.reduce((s, it) => s + it.price * it.qty, 0) * 100) / 100;
@@ -378,6 +390,7 @@ app.post('/api/admin/product', admin, (req, res) => {
   p.category = (b.category || 'Generale').toString().slice(0, 60) || 'Generale';
   p.stock = (b.stock === '' || b.stock == null) ? null : Math.max(0, parseInt(b.stock) || 0);
   p.supplierUrl = (b.supplierUrl || '').toString().slice(0, 600); // link prodotto AliExpress (fornitore)
+  p.sizes = (Array.isArray(b.sizes) ? b.sizes : (b.sizes || '').toString().split(',')).map(s => s.toString().trim()).filter(Boolean).slice(0, 20);
   save();
   res.json({ ok: true, product: p });
 });

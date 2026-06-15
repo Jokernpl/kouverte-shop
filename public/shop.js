@@ -79,7 +79,7 @@ function renderGrid(list) {
       </div>`;
     card.onclick = () => openProduct(p.id);
     const add = card.querySelector('.add');
-    if (add) add.onclick = (e) => { e.stopPropagation(); addToCart(p.id); };
+    if (add) add.onclick = (e) => { e.stopPropagation(); if (p.sizes && p.sizes.length) openProduct(p.id); else addToCart(p.id); };
     g.appendChild(card);
   });
 }
@@ -88,7 +88,7 @@ function starsHtml(avg) { const f = Math.round(avg || 0); return '<span class="s
 const num1 = n => (Math.round((n || 0) * 10) / 10).toFixed(1).replace('.', ',');
 
 // ---- product modal ----
-let curMainImg = '';
+let curMainImg = '', selectedSize = '';
 function setMainImg(url) {
   curMainImg = url || '';
   $('#pmImg').innerHTML = url ? `<img src="${esc(url)}" onerror="this.parentElement.textContent='📦'">` : '📦';
@@ -110,9 +110,19 @@ function openProduct(id) {
   $('#pmName').textContent = p.name;
   $('#pmPrice').textContent = money(p.price);
   $('#pmDesc').textContent = p.description || '';
+  selectedSize = '';
+  const sz = $('#pmSizes');
+  if (p.sizes && p.sizes.length) {
+    sz.style.display = 'block';
+    sz.innerHTML = '<div class="sz-label">Taglia:</div><div class="sz-row">' + p.sizes.map(s => `<button class="sz" type="button" data-s="${esc(s)}">${esc(s)}</button>`).join('') + '</div>';
+    sz.querySelectorAll('.sz').forEach(b => b.onclick = () => { selectedSize = b.dataset.s; sz.querySelectorAll('.sz').forEach(x => x.classList.remove('on')); b.classList.add('on'); });
+  } else { sz.style.display = 'none'; sz.innerHTML = ''; }
   const btn = $('#pmAdd');
   btn.style.display = p.stock === 0 ? 'none' : 'block';
-  btn.onclick = () => { addToCart(p.id); closeProduct(); };
+  btn.onclick = () => {
+    if (p.sizes && p.sizes.length && !selectedSize) return toast('Scegli la taglia');
+    addToCart(p.id, selectedSize); closeProduct();
+  };
   loadReviews(p.id);
   const d = $('.pmodal .drawer'); if (d) d.scrollTop = 0;
   $('#pmodal').classList.add('on');
@@ -189,12 +199,16 @@ function closeInfo() { $('#imodal').classList.remove('on'); }
 $('#imodal').onclick = closeInfo;
 
 // ---- cart ----
-function addToCart(id) {
-  CART[id] = (CART[id] || 0) + 1; saveCart(); toast('Aggiunto al carrello ✓');
+function cartKey(id, size) { return size ? id + '::' + size : id; }
+function addToCart(id, size) {
+  const k = cartKey(id, size);
+  CART[k] = (CART[k] || 0) + 1; saveCart(); toast('Aggiunto al carrello ✓');
   const b = $('#cartBtn'); if (b) { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
 }
-function setQty(id, q) { if (q <= 0) delete CART[id]; else CART[id] = q; saveCart(); renderCart(); }
-function cartList() { return Object.keys(CART).map(id => ({ p: prod(id), qty: CART[id] })).filter(x => x.p); }
+function setQty(key, q) { if (q <= 0) delete CART[key]; else CART[key] = q; saveCart(); renderCart(); }
+function cartList() {
+  return Object.keys(CART).map(k => { const i = k.indexOf('::'); const id = i < 0 ? k : k.slice(0, i); const size = i < 0 ? '' : k.slice(i + 2); return { key: k, p: prod(id), size, qty: CART[k] }; }).filter(x => x.p);
+}
 function cartTotal() { return cartList().reduce((s, x) => s + x.p.price * x.qty, 0); }
 function renderCartCount() { const n = Object.values(CART).reduce((a, b) => a + b, 0); $('#cartCount').textContent = n; }
 
@@ -215,19 +229,19 @@ function renderCart() {
   if (!items.length) { box.innerHTML = `<div class="empty" style="padding:50px 0"><h3>Carrello vuoto</h3><p>Aggiungi qualche prodotto 🙂</p></div>`; $('#cartTotal').textContent = money(0); $('#toCheckout').disabled = true; return; }
   $('#toCheckout').disabled = false;
   box.innerHTML = '';
-  items.forEach(({ p, qty }) => {
+  items.forEach(({ p, qty, size, key }) => {
     const row = document.createElement('div');
     row.className = 'citem';
     row.innerHTML = `
       <div class="ci-thumb">${p.image ? `<img src="${esc(p.image)}" onerror="this.remove()">` : '📦'}</div>
       <div style="flex:1;min-width:0">
-        <div class="ci-name">${esc(p.name)}</div>
+        <div class="ci-name">${esc(p.name)}${size ? ` · <b>Taglia ${esc(size)}</b>` : ''}</div>
         <div class="ci-price">${money(p.price)} · totale ${money(p.price * qty)}</div>
         <div class="qty"><button data-m="-1">−</button><span>${qty}</span><button data-m="1">+</button></div>
         <button class="rm">Rimuovi</button>
       </div>`;
-    row.querySelectorAll('.qty button').forEach(b => b.onclick = () => setQty(p.id, qty + parseInt(b.dataset.m)));
-    row.querySelector('.rm').onclick = () => setQty(p.id, 0);
+    row.querySelectorAll('.qty button').forEach(b => b.onclick = () => setQty(key, qty + parseInt(b.dataset.m)));
+    row.querySelector('.rm').onclick = () => setQty(key, 0);
     box.appendChild(row);
   });
   $('#cartTotal').textContent = money(cartTotal());
@@ -242,7 +256,7 @@ $('#payBtn').onclick = async function () {
     address: $('#f_address').value.trim(), city: $('#f_city').value.trim(), zip: $('#f_zip').value.trim(), note: $('#f_note').value.trim()
   };
   if (!customer.name || !customer.email || !customer.address) return toast('Compila nome, email e indirizzo');
-  const items = cartList().map(x => ({ id: x.p.id, qty: x.qty }));
+  const items = cartList().map(x => ({ id: x.p.id, qty: x.qty, size: x.size }));
   btn.disabled = true; const old = btn.textContent; btn.textContent = 'Attendere…';
   try {
     const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, customer }) });

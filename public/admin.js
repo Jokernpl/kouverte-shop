@@ -191,7 +191,7 @@ async function loadOrders() {
         <div><b>${money(o.total)}</b> <span class="tag ${o.status}">${OLABEL[o.status] || o.status}</span> <span class="mini">· margine ${money(margin)}</span></div>
         <div class="mini">${new Date(o.ts).toLocaleString('it-IT')}</div>
       </div>
-      <div style="margin:8px 0;font-size:14px">${o.items.map(it => `${esc(it.name)} × ${it.qty}`).join('<br>')}</div>
+      <div style="margin:8px 0;font-size:14px">${o.items.map(it => `${esc(it.name)}${it.size ? ` <b style="color:var(--brand)">[Taglia ${esc(it.size)}]</b>` : ''} × ${it.qty}`).join('<br>')}</div>
       <div class="mini" style="background:var(--bg);border-radius:10px;padding:10px;line-height:1.6">
         👤 <b>${esc(c.name || '')}</b> · ✉️ ${esc(c.email || '')} · 📞 ${esc(c.phone || '-')}<br>
         📍 ${esc(c.address || '')} ${esc(c.city || '')} ${esc(c.zip || '')}${c.note ? '<br>📝 ' + esc(c.note) : ''}
@@ -204,7 +204,7 @@ async function loadOrders() {
       </div>
       <div style="margin-top:10px;border-top:1px dashed var(--line);padding-top:10px">
         <div class="mini" style="margin-bottom:6px"><b>🚚 Fornitore (dropshipping)</b></div>
-        <div style="font-size:13px;margin-bottom:8px">${o.items.map(it => it.supplierUrl ? `<a href="${esc(it.supplierUrl)}" target="_blank" rel="noopener" style="color:var(--brand);font-weight:600">↗ ordina “${esc(it.name)}” su AliExpress</a>` : `<span class="mini">${esc(it.name)} — ⚠️ nessun link fornitore</span>`).join('<br>')}</div>
+        <div style="font-size:13px;margin-bottom:8px">${o.items.map(it => it.supplierUrl ? `<a href="${esc(it.supplierUrl)}" target="_blank" rel="noopener" style="color:var(--brand);font-weight:600">↗ ordina “${esc(it.name)}”${it.size ? ` taglia ${esc(it.size)}` : ''} su AliExpress</a>` : `<span class="mini">${esc(it.name)}${it.size ? ` taglia ${esc(it.size)}` : ''} — ⚠️ nessun link fornitore</span>`).join('<br>')}</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <button class="btn small" data-fulfill>📦 Ordina dal fornitore</button>
           <select data-fst>${['da_inoltrare', 'inoltrato', 'pagato', 'spedito', 'errore'].map(s => `<option value="${s}" ${f.status === s ? 'selected' : ''}>${FLABEL[s]}</option>`).join('')}</select>
