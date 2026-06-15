@@ -114,16 +114,29 @@ function openProduct(id) {
   btn.style.display = p.stock === 0 ? 'none' : 'block';
   btn.onclick = () => { addToCart(p.id); closeProduct(); };
   loadReviews(p.id);
+  const d = $('.pmodal .drawer'); if (d) d.scrollTop = 0;
   $('#pmodal').classList.add('on');
+  try { history.pushState({ pm: 1 }, ''); } catch (e) {}
 }
-function closeProduct() { $('#pmodal').classList.remove('on'); }
+function realCloseProduct() { $('#pmodal').classList.remove('on'); }
+function closeProduct() {
+  closeLightbox();
+  if (history.state && history.state.pm) history.back(); // il tasto "indietro" del telefono chiude la scheda, non esce dal sito
+  else realCloseProduct();
+}
 $('#pmodal').onclick = closeProduct;
+window.addEventListener('popstate', () => { realCloseProduct(); closeLightbox(); });
 
 // ---- foto a schermo intero (zoom) ----
 function openLightbox(url) { if (!url) return; $('#lbImg').src = url; $('#lightbox').classList.add('on'); }
 function closeLightbox() { $('#lightbox').classList.remove('on'); }
 $('#pmImg').onclick = () => openLightbox(curMainImg);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeLightbox(); closeProduct(); } });
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('#lightbox').classList.contains('on')) return closeLightbox();
+  if ($('#pmodal').classList.contains('on')) closeProduct();
+  else if ($('#imodal').classList.contains('on')) closeInfo();
+});
 
 // ---- recensioni ----
 let rvStars = 0, rvPid = null;
