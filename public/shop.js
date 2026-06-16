@@ -1,21 +1,41 @@
 // ===== Kouverte Shop — storefront =====
 let CFG = { shopName: 'Kouverte Elettronica', currency: 'eur', stripeEnabled: false };
 let PRODUCTS = [];
+let CATALOG = {};      // id -> prodotto (catalogo completo, non filtrato: serve al carrello)
 let CART = {};         // { productId: qty }
 let curCat = '';
+let pmQty = 1;
 try { CART = JSON.parse(localStorage.getItem('shop_cart') || '{}'); } catch (e) { CART = {}; }
 
 const $ = s => document.querySelector(s);
 const money = n => '€' + (Math.round(n * 100) / 100).toFixed(2).replace('.', ',');
+const emailOk = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e || '');
+// versione ridotta delle foto AliExpress per la griglia (più veloci); fallback alla full in caso di errore
+function aeThumb(url, size) { return (url && /alicdn\.com\/.+\.(jpg|jpeg|png|webp)/i.test(url)) ? url + '_' + size + 'x' + size + 'q80.jpg' : url; }
+// foto rotta: prima riprova con la versione full, poi mostra il placeholder
+function imgErr(el) {
+  if (el.dataset.full && el.src !== el.dataset.full) { el.src = el.dataset.full; return; }
+  const m = el.dataset.err || 'remove';
+  if (m === 'box') el.parentElement.textContent = '📦';
+  else if (m === 'parent') el.parentElement.remove();
+  else el.remove();
+}
 function saveCart() { localStorage.setItem('shop_cart', JSON.stringify(CART)); renderCartCount(); }
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), 1900); }
-function prod(id) { return PRODUCTS.find(p => p.id === id); }
+function toast(msg, isError) {
+  const t = $('#toast'); t.textContent = msg;
+  t.classList.toggle('toast-err', !!isError); t.classList.add('on');
+  if (isError && navigator.vibrate) { try { navigator.vibrate([12, 6, 12]); } catch (e) {} }
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('on'), isError ? 4500 : 3200);
+}
+function setPageTitle(t) { document.title = t ? (t + ' — Kouverte') : 'Kouverte — Tutto quello che cerchi, ai prezzi che sorprendono'; }
+function prod(id) { return CATALOG[id] || PRODUCTS.find(p => p.id === id); }
 
 async function boot() {
   try { CFG = await (await fetch('/api/config')).json(); } catch (e) {}
-  document.title = CFG.shopName;
+  setPageTitle('');
   populateTicker();
-  await loadProducts();
+  await loadProducts();        // boot: nessun filtro → CATALOG completo
+  pruneCart();                 // togli dal carrello eventuali prodotti non più in vendita
   const hc = $('#heroCount'); if (hc) hc.textContent = PRODUCTS.length || '—';
   renderCartCount();
   // success/cancel banners
@@ -33,9 +53,19 @@ async function loadProducts() {
     const r = await fetch('/api/products' + (curCat ? '?cat=' + encodeURIComponent(curCat) : ''));
     const d = await r.json();
     PRODUCTS = d.products || [];
+    PRODUCTS.forEach(p => { CATALOG[p.id] = p; });   // alimenta il catalogo completo (per il carrello)
+    setPageTitle(curCat || '');
     renderCats(d.categories || []);
     renderGrid(PRODUCTS);
-  } catch (e) { $('#empty').style.display = 'block'; }
+  } catch (e) {
+    $('#empty').style.display = 'block';
+    toast('Connessione lenta — ricarica la pagina', true);
+  }
+}
+function pruneCart() {
+  let changed = false;
+  Object.keys(CART).forEach(k => { const i = k.indexOf('::'); const id = i < 0 ? k : k.slice(0, i); if (!CATALOG[id]) { delete CART[k]; changed = true; } });
+  if (changed) saveCart();
 }
 function renderCats(cats) {
   const el = $('#cats');
@@ -60,13 +90,13 @@ function renderGrid(list) {
     const hot = (p.rating && p.rating.count >= 3) || i < 2;
     const low = (p.stock != null && p.stock > 0 && p.stock <= 10);
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = 'card' + (hot && !sold ? ' top-product' : '');
     card.style.animationDelay = (i * 55) + 'ms';
     card.innerHTML = `
       <div class="thumb">
-        ${low ? `<span class="card-badge">🔥 Solo ${p.stock} rimasti</span>` : (hot ? '<span class="card-badge">🔥 Top</span>' : '')}
+        ${low ? `<span class="card-badge low">🔥 Solo ${p.stock} rimasti</span>` : (hot ? '<span class="card-badge">🔥 Top</span>' : '')}
         <span class="card-ship">🚚 Spedizione gratis</span>
-        ${img ? `<img src="${esc(img)}" loading="lazy" onerror="this.remove()">` : '📦'}
+        ${img ? `<img src="${esc(aeThumb(img, 320))}" data-full="${esc(img)}" data-err="box" loading="lazy" alt="${esc(p.name)}" onerror="imgErr(this)">` : '📦'}
       </div>
       <div class="info">
         <div class="cat">${esc(p.category || '')}</div>
@@ -91,7 +121,7 @@ const num1 = n => (Math.round((n || 0) * 10) / 10).toFixed(1).replace('.', ',');
 let curMainImg = '', selectedSize = '';
 function setMainImg(url) {
   curMainImg = url || '';
-  $('#pmImg').innerHTML = url ? `<img src="${esc(url)}" onerror="this.parentElement.textContent='📦'">` : '📦';
+  $('#pmImg').innerHTML = url ? `<img src="${esc(url)}" alt="Foto prodotto" data-err="box" onerror="imgErr(this)">` : '📦';
 }
 function openProduct(id) {
   const p = prod(id); if (!p) return;
@@ -99,7 +129,7 @@ function openProduct(id) {
   setMainImg(imgs[0] || '');
   const gal = $('#pmGallery');
   if (imgs.length > 1) {
-    gal.innerHTML = imgs.map((u, i) => `<div class="pm-thumb${i === 0 ? ' on' : ''}"><img src="${esc(u)}" loading="lazy" onerror="this.parentElement.remove()"></div>`).join('');
+    gal.innerHTML = imgs.map((u, i) => `<div class="pm-thumb${i === 0 ? ' on' : ''}"><img src="${esc(u)}" data-err="parent" loading="lazy" alt="Foto ${i + 1}" onerror="imgErr(this)"></div>`).join('');
     gal.querySelectorAll('.pm-thumb').forEach((t, i) => t.onclick = () => {
       setMainImg(imgs[i]);
       gal.querySelectorAll('.pm-thumb').forEach(x => x.classList.remove('on'));
@@ -110,6 +140,15 @@ function openProduct(id) {
   $('#pmName').textContent = p.name;
   $('#pmPrice').textContent = money(p.price);
   $('#pmDesc').textContent = p.description || '';
+  // riquadro fiducia (solo info reali: niente conteggi vendite finti)
+  const stockTxt = p.stock === 0 ? '<b style="color:var(--bad)">Esaurito</b>'
+    : (p.stock != null && p.stock > 0 ? `<b>${p.stock} disponibili</b>` : '<b>Disponibile</b>');
+  $('#pmTrust').innerHTML = `
+    <div class="tr"><span class="ic">✅</span><span>Disponibilità: ${stockTxt}</span></div>
+    <div class="tr"><span class="ic">🚚</span><span>Consegna stimata <b>7–15 giorni</b> · spedizione <b>gratuita</b></span></div>
+    <div class="tr"><span class="ic">🛡️</span><span>Garanzia <b>24 mesi</b> · reso entro <b>14 giorni</b></span></div>
+    <div class="tr"><span class="ic">🔒</span><span>Pagamento <b>sicuro</b> · tracking via email</span></div>`;
+  pmQty = 1; renderPmQty();
   selectedSize = '';
   const sz = $('#pmSizes');
   if (p.sizes && p.sizes.length) {
@@ -118,10 +157,11 @@ function openProduct(id) {
     sz.querySelectorAll('.sz').forEach(b => b.onclick = () => { selectedSize = b.dataset.s; sz.querySelectorAll('.sz').forEach(x => x.classList.remove('on')); b.classList.add('on'); });
   } else { sz.style.display = 'none'; sz.innerHTML = ''; }
   const btn = $('#pmAdd');
-  btn.style.display = p.stock === 0 ? 'none' : 'block';
+  const buyRow = btn.closest('.pm-buy');
+  if (buyRow) buyRow.style.display = p.stock === 0 ? 'none' : 'flex';
   btn.onclick = () => {
-    if (p.sizes && p.sizes.length && !selectedSize) return toast('Scegli la taglia');
-    addToCart(p.id, selectedSize); closeProduct();
+    if (p.sizes && p.sizes.length && !selectedSize) return toast('Scegli prima la taglia', true);
+    addToCart(p.id, selectedSize, pmQty); closeProduct();
   };
   loadReviews(p.id);
   const d = $('.pmodal .drawer'); if (d) d.scrollTop = 0;
@@ -141,6 +181,11 @@ window.addEventListener('popstate', () => { realCloseProduct(); closeLightbox();
 function openLightbox(url) { if (!url) return; $('#lbImg').src = url; $('#lightbox').classList.add('on'); }
 function closeLightbox() { $('#lightbox').classList.remove('on'); }
 $('#pmImg').onclick = () => openLightbox(curMainImg);
+// selettore quantità nel modale + perks cliccabili (apre la pagina info)
+function renderPmQty() { const e = $('#pmQty'); if (e) e.textContent = pmQty; }
+if ($('#pmQtyMinus')) $('#pmQtyMinus').onclick = () => { pmQty = Math.max(1, pmQty - 1); renderPmQty(); };
+if ($('#pmQtyPlus')) $('#pmQtyPlus').onclick = () => { pmQty = Math.min(99, pmQty + 1); renderPmQty(); };
+document.querySelectorAll('.pm-perks span[data-info]').forEach(s => s.onclick = () => openInfo(s.dataset.info));
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if ($('#lightbox').classList.contains('on')) return closeLightbox();
@@ -200,12 +245,19 @@ $('#imodal').onclick = closeInfo;
 
 // ---- cart ----
 function cartKey(id, size) { return size ? id + '::' + size : id; }
-function addToCart(id, size) {
+function addToCart(id, size, qty) {
+  qty = parseInt(qty, 10); if (isNaN(qty) || qty < 1) qty = 1; if (qty > 99) qty = 99;
   const k = cartKey(id, size);
-  CART[k] = (CART[k] || 0) + 1; saveCart(); toast('Aggiunto al carrello ✓');
+  CART[k] = Math.min(99, (CART[k] || 0) + qty); saveCart();
+  toast(qty > 1 ? ('Aggiunti ' + qty + ' al carrello ✓') : 'Aggiunto al carrello ✓');
   const b = $('#cartBtn'); if (b) { b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
 }
-function setQty(key, q) { if (q <= 0) delete CART[key]; else CART[key] = q; saveCart(); renderCart(); }
+function setQty(key, q) {
+  q = parseInt(q, 10);
+  if (isNaN(q) || q <= 0) delete CART[key];
+  else CART[key] = Math.min(99, q);
+  saveCart(); renderCart();
+}
 function cartList() {
   return Object.keys(CART).map(k => { const i = k.indexOf('::'); const id = i < 0 ? k : k.slice(0, i); const size = i < 0 ? '' : k.slice(i + 2); return { key: k, p: prod(id), size, qty: CART[k] }; }).filter(x => x.p);
 }
@@ -233,7 +285,7 @@ function renderCart() {
     const row = document.createElement('div');
     row.className = 'citem';
     row.innerHTML = `
-      <div class="ci-thumb">${p.image ? `<img src="${esc(p.image)}" onerror="this.remove()">` : '📦'}</div>
+      <div class="ci-thumb">${p.image ? `<img src="${esc(aeThumb(p.image, 130))}" data-full="${esc(p.image)}" data-err="box" alt="${esc(p.name)}" onerror="imgErr(this)">` : '📦'}</div>
       <div style="flex:1;min-width:0">
         <div class="ci-name">${esc(p.name)}${size ? ` · <b>Taglia ${esc(size)}</b>` : ''}</div>
         <div class="ci-price">${money(p.price)} · totale ${money(p.price * qty)}</div>
@@ -255,8 +307,12 @@ $('#payBtn').onclick = async function () {
     name: $('#f_name').value.trim(), email: $('#f_email').value.trim(), phone: $('#f_phone').value.trim(),
     address: $('#f_address').value.trim(), city: $('#f_city').value.trim(), zip: $('#f_zip').value.trim(), note: $('#f_note').value.trim()
   };
-  if (!customer.name || !customer.email || !customer.address) return toast('Compila nome, email e indirizzo');
-  const items = cartList().map(x => ({ id: x.p.id, qty: x.qty, size: x.size }));
+  let bad = false;
+  if (!customer.name) { markField('f_name', false); bad = true; }
+  if (!emailOk(customer.email)) { markField('f_email', false); bad = true; }
+  if (!customer.address) { markField('f_address', false); bad = true; }
+  if (bad) return toast('Controlla i campi evidenziati in rosso', true);
+  const items = cartList().map(x => ({ id: x.p.id, qty: Math.max(1, Math.min(99, x.qty)), size: x.size }));
   btn.disabled = true; const old = btn.textContent; btn.textContent = 'Attendere…';
   try {
     const r = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, customer }) });
@@ -266,6 +322,22 @@ $('#payBtn').onclick = async function () {
     toast(d.error || 'Errore nel pagamento'); btn.disabled = false; btn.textContent = old;
   } catch (e) { toast('Errore di rete'); btn.disabled = false; btn.textContent = old; }
 };
+
+// validazione campi checkout (in tempo reale)
+function markField(id, ok) { const el = $('#' + id), f = el && el.closest('.field'); if (!f) return; f.classList.toggle('bad', !ok); f.classList.toggle('ok', ok); }
+['f_name', 'f_email', 'f_address'].forEach(id => {
+  const el = $('#' + id); if (!el) return;
+  el.addEventListener('blur', () => { const v = el.value.trim(); if (v || id !== 'f_email') markField(id, id === 'f_email' ? emailOk(v) : !!v); });
+  el.addEventListener('input', () => { const f = el.closest('.field'); if (f) f.classList.remove('bad'); });
+});
+
+// sincronizza il carrello tra più schede aperte
+window.addEventListener('storage', e => {
+  if (e.key !== 'shop_cart') return;
+  try { CART = JSON.parse(e.newValue || '{}'); } catch (_) { CART = {}; }
+  renderCartCount();
+  if ($('#cartDrawer').classList.contains('on')) renderCart();
+});
 
 // search (debounced)
 let st;

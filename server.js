@@ -147,7 +147,7 @@ function seed() {
     { name: 'Smart TV Xiaomi 32” HD — Wi-Fi', price: 250.00, cost: 116.00, category: 'Tecnologia',
       description: 'Smart TV Xiaomi da 32 pollici HD con Wi-Fi, app di streaming integrate e telecomando. Compatta e dal suono dinamico, perfetta per camera e soggiorno.',
       supplierUrl: 'https://it.aliexpress.com/item/1005010063076436.html',
-      images: ['https://ae01.alicdn.com/kf/S89c4e79bb71c46c09ac6b680077c6908F.jpg', 'https://ae01.alicdn.com/kf/Sb5b57a878d5b48e7a3bcb3b1a1f06de9C.jpg', 'https://ae01.alicdn.com/kf/Sa86d9777a0e14b418003173d1909ce1dR.jpg', 'https://ae01.alicdn.com/kf/S5a73bd1065ed4b5f947e12d96b27f332r.jpg', 'https://ae01.alicdn.com/kf/S09ba93e5886045ee9072dc39b41330cb7.jpg', 'https://ae01.alicdn.com/kf/S5be46d9de945406c823fed6ab311cffdN.jpg'] },
+      images: ['https://ae01.alicdn.com/kf/S89c4e79bb71c46c09ac6b680077c6908F.jpg', 'https://ae01.alicdn.com/kf/Sa86d9777a0e14b418003173d1909ce1dR.jpg', 'https://ae01.alicdn.com/kf/S5a73bd1065ed4b5f947e12d96b27f332r.jpg', 'https://ae01.alicdn.com/kf/S09ba93e5886045ee9072dc39b41330cb7.jpg', 'https://ae01.alicdn.com/kf/S5be46d9de945406c823fed6ab311cffdN.jpg'] },
     { name: 'Polo Uomo Waffle Tinta Unita — Estate', price: 29.90, cost: 10.00, category: 'Moda', sizes: ['S', 'M', 'L', 'XL', 'XXL'],
       description: 'Polo da uomo in tessuto waffle traspirante, con taschino. Vestibilità regolare, perfetta per l’estate. Scegli la tua taglia tra S e XXL.',
       supplierUrl: 'https://it.aliexpress.com/item/1005008744711411.html',
@@ -202,8 +202,8 @@ app.get('/api/config', (req, res) => res.json({ shopName: SHOP_NAME, currency: C
 app.get('/api/health', (req, res) => res.json({ ok: true, products: db.products.length, orders: db.orders.length, reviews: db.reviews.length, stripe: !!stripe }));
 
 app.get('/api/products', (req, res) => {
-  const q = (req.query.q || '').toString().toLowerCase().trim();
-  const cat = (req.query.cat || '').toString();
+  const q = (req.query.q || '').toString().toLowerCase().trim().slice(0, 120);
+  const cat = (req.query.cat || '').toString().slice(0, 80);
   let list = db.products.slice();
   if (cat) list = list.filter(p => p.category === cat);
   if (q) list = list.filter(p => (p.name + ' ' + p.description + ' ' + p.category).toLowerCase().includes(q));
@@ -363,8 +363,15 @@ function admin(req, res, next) {
   if (pass !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Password errata' });
   next();
 }
+// anti brute-force sul login admin (in memoria): max 8 tentativi falliti / 10 min per IP
+const loginHits = new Map();
 app.post('/api/admin/login', (req, res) => {
-  if ((req.body && req.body.pass) === ADMIN_PASSWORD) return res.json({ ok: true });
+  const ip = (req.headers['x-forwarded-for'] || req.ip || '').toString().split(',')[0].trim();
+  const now = Date.now(), rec = loginHits.get(ip) || { n: 0, t: now };
+  if (now - rec.t > 10 * 60 * 1000) { rec.n = 0; rec.t = now; }
+  if (rec.n >= 8) return res.status(429).json({ error: 'Troppi tentativi. Riprova tra qualche minuto.' });
+  if ((req.body && req.body.pass) === ADMIN_PASSWORD) { loginHits.delete(ip); return res.json({ ok: true }); }
+  rec.n++; rec.t = rec.t || now; loginHits.set(ip, rec);
   res.status(401).json({ error: 'Password errata' });
 });
 app.get('/api/admin/products', admin, (req, res) => res.json({ products: db.products }));
@@ -390,7 +397,8 @@ app.post('/api/admin/product', admin, (req, res) => {
   p.category = (b.category || 'Generale').toString().slice(0, 60) || 'Generale';
   p.stock = (b.stock === '' || b.stock == null) ? null : Math.max(0, parseInt(b.stock) || 0);
   p.supplierUrl = (b.supplierUrl || '').toString().slice(0, 600); // link prodotto AliExpress (fornitore)
-  p.sizes = (Array.isArray(b.sizes) ? b.sizes : (b.sizes || '').toString().split(',')).map(s => s.toString().trim()).filter(Boolean).slice(0, 20);
+  p.sizes = (Array.isArray(b.sizes) ? b.sizes : (b.sizes || '').toString().split(','))
+    .map(s => s.toString().trim()).filter(s => /^[A-Za-z0-9 ./-]{1,20}$/.test(s)).slice(0, 20);
   save();
   res.json({ ok: true, product: p });
 });

@@ -63,7 +63,13 @@ function collectImages(html, ogImage) {
 }
 
 async function importFromAliExpress(url) {
-  if (!/aliexpress|\/item\/\d+/.test(url || '')) {
+  const idMatch = (url || '').match(/\/item\/(\d+)\.html/);
+  if (idMatch) {
+    // c'è un id esplicito: dev'essere realistico (no 0, niente overflow)
+    if (!/^[1-9]\d{4,17}$/.test(idMatch[1])) {
+      return { ok: false, error: 'Il link non contiene un codice prodotto valido. Copia di nuovo il link da AliExpress (…/item/NUMERO.html).' };
+    }
+  } else if (!/aliexpress\.com/i.test(url || '')) {
     return { ok: false, error: 'Incolla un link prodotto AliExpress valido (…/item/NUMERO.html)' };
   }
   const target = normUrl(url);

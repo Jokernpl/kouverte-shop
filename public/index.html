@@ -3,9 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Kouverte Elettronica</title>
-<meta name="description" content="Kouverte — tutto quello che cerchi, ai prezzi che sorprendono. Spedizione tracciata, pagamenti sicuri, reso facile.">
-<link rel="stylesheet" href="style.css?v=4">
+<title>Kouverte — Tutto quello che cerchi, ai prezzi che sorprendono</title>
+<meta name="description" content="Kouverte — migliaia di prodotti selezionati ai prezzi che sorprendono. Spedizione tracciata in tutta Italia, pagamenti sicuri, reso facile entro 14 giorni, garanzia 24 mesi.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#6d28d9">
+<link rel="canonical" href="https://kouverte-shop.onrender.com/">
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/favicon.svg">
+<!-- Open Graph / social sharing -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kouverte">
+<meta property="og:locale" content="it_IT">
+<meta property="og:title" content="Kouverte — Tutto quello che cerchi, ai prezzi che sorprendono">
+<meta property="og:description" content="Migliaia di prodotti selezionati. Spedizione tracciata in tutta Italia, pagamenti sicuri, reso facile entro 14 giorni, garanzia 24 mesi.">
+<meta property="og:image" content="https://kouverte-shop.onrender.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://kouverte-shop.onrender.com/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kouverte — Tutto quello che cerchi, ai prezzi che sorprendono">
+<meta name="twitter:description" content="Spedizione tracciata, pagamenti sicuri, reso facile, garanzia 24 mesi.">
+<meta name="twitter:image" content="https://kouverte-shop.onrender.com/og.png">
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -61,18 +85,28 @@
     <div class="pm-img" id="pmImg" title="Tocca per ingrandire">📦</div>
     <div class="pm-gallery" id="pmGallery"></div>
     <div class="pm-body">
-      <div class="card-cat" style="color:var(--brand);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.6px" id="pmCat"></div>
-      <h2 id="pmName" style="margin:6px 0"></h2>
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div class="price" id="pmPrice" style="font-size:28px"></div>
-        <div class="rstars" id="pmStars"></div>
+      <div class="pm-info-card">
+        <div class="card-cat" id="pmCat"></div>
+        <h2 id="pmName"></h2>
+        <div class="pm-priceline">
+          <div class="price" id="pmPrice"></div>
+          <div class="rstars" id="pmStars"></div>
+        </div>
       </div>
       <div class="pm-perks">
-        <span>🚚 Spedizione tracciata</span><span>🔒 Pagamento sicuro</span><span>↩️ Reso 14 giorni</span>
+        <span data-info="spedizioni">🚚 Spedizione tracciata</span><span data-info="pagamenti">🔒 Pagamento sicuro</span><span data-info="resi">↩️ Reso 14 giorni</span>
       </div>
+      <div class="pm-trust" id="pmTrust"></div>
       <div class="pm-desc" id="pmDesc"></div>
       <div class="pm-sizes" id="pmSizes" style="display:none"></div>
-      <button class="btn pulse" id="pmAdd">Aggiungi al carrello</button>
+      <div class="pm-buy">
+        <div class="qty-pick" aria-label="Quantità">
+          <button type="button" class="qbtn" id="pmQtyMinus" aria-label="Diminuisci">−</button>
+          <span class="qval" id="pmQty">1</span>
+          <button type="button" class="qbtn" id="pmQtyPlus" aria-label="Aumenta">+</button>
+        </div>
+        <button class="btn pulse" id="pmAdd">Aggiungi al carrello</button>
+      </div>
 
       <!-- Recensioni -->
       <div class="rev-sec">
@@ -132,6 +166,11 @@
         <div class="field"><label>Note (opzionale)</label><textarea id="f_note" rows="2" placeholder="Note per la consegna..."></textarea></div>
       </div>
       <div class="dfoot">
+        <div class="ship-sum">
+          <div class="ship-row"><span>📦 Spedizione</span><b class="free">Gratis</b></div>
+          <div class="ship-row"><span>🚚 Consegna stimata</span><b>7–15 giorni</b></div>
+          <div class="ship-row"><span>📍 Tracking</span><b>via email</b></div>
+        </div>
         <div class="totrow"><span>Totale da pagare</span><b id="coTotal">€0,00</b></div>
         <button class="btn" id="payBtn">Paga ora</button>
         <button class="btn ghost" style="margin-top:8px" onclick="showCartView()">← Torna al carrello</button>
@@ -179,6 +218,6 @@
 
 <div class="toast" id="toast"></div>
 <script src="/socket.io/socket.io.js"></script>
-<script src="shop.js?v=4"></script>
+<script src="shop.js?v=5"></script>
 </body>
 </html>
