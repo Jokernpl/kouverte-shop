@@ -152,7 +152,8 @@ img{display:block;max-width:100%}
 .secure{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--ok);font-weight:700;margin-top:8px}
 
 /* ===== Modale prodotto + galleria ===== */
-.pmodal .drawer{left:50%;right:auto;top:50%;transform:translate(-50%,-46%) scale(.96);height:auto;max-height:90vh;width:580px;border-radius:22px;opacity:0;transition:.24s;overflow:auto}
+/* display:block (non flex): la modale è un contenitore che scorre, così la foto non viene "schiacciata" a 0 dal flex */
+.pmodal .drawer{display:block;left:50%;right:auto;top:50%;transform:translate(-50%,-46%) scale(.96);height:auto;max-height:90vh;width:580px;border-radius:22px;opacity:0;transition:.24s;overflow:auto}
 .pmodal.on .drawer{transform:translate(-50%,-50%);opacity:1}
 .pm-img{aspect-ratio:16/11;background:linear-gradient(135deg,#f3eefe,#fce7f3);display:grid;place-items:center;font-size:74px;color:#c4b5fd;overflow:hidden}
 .pm-img img{width:100%;height:100%;object-fit:cover}
